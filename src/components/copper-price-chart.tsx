@@ -44,7 +44,7 @@ import {
   type CopperPriceHistory,
   type CopperPriceRange,
 } from "@/lib/api"
-import { DEV_BYPASS_AUTH } from "@/lib/dev-bypass-auth"
+import { DEV_BYPASS_AUTH, DEMO_MODE } from "@/lib/dev-bypass-auth"
 import { demoPriceHistory } from "@/lib/demo-data"
 
 const RANGES: Array<{ value: CopperPriceRange; label: string }> = [
@@ -158,7 +158,7 @@ export function CopperPriceChart({
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Copper price history
               </CardTitle>
-              {isMockSeries && (
+              {isMockSeries && !DEMO_MODE && (
                 <Badge variant="outline" className="text-muted-foreground">
                   Sample data
                 </Badge>

@@ -19,7 +19,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { copttApi, type CopperPrice } from "@/lib/api"
-import { DEV_BYPASS_AUTH } from "@/lib/dev-bypass-auth"
+import { DEV_BYPASS_AUTH, DEMO_MODE } from "@/lib/dev-bypass-auth"
 import { demoPrice } from "@/lib/demo-data"
 
 const POLL_MS = 60_000
@@ -69,7 +69,7 @@ export function CopperPriceCard() {
               {price?.feed_symbol ?? "PYTH COPPER 24/7"} · per pound
             </CardDescription>
           </div>
-          {price && <SourceBadge source={price.source} stale={price.stale} />}
+          {price && !DEMO_MODE && <SourceBadge source={price.source} stale={price.stale} />}
         </div>
       </CardHeader>
       <CardContent>
