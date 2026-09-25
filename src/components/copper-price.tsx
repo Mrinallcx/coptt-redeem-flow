@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/card"
 import { copttApi, type CopperPrice } from "@/lib/api"
 import { DEV_BYPASS_AUTH } from "@/lib/dev-bypass-auth"
+import { demoPrice } from "@/lib/demo-data"
 
 const POLL_MS = 60_000
 
@@ -30,14 +31,7 @@ export function CopperPriceCard() {
 
   const fetchPrice = useCallback(async () => {
     if (DEV_BYPASS_AUTH) {
-      const now = new Date().toISOString()
-      setPrice({
-        usd_per_lb: 6.5771,
-        publish_time: now,
-        source: "mock",
-        fetched_at: now,
-        feed_symbol: "COMEX High Grade Copper",
-      })
+      setPrice(demoPrice())
       setError(null)
       setLoading(false)
       return

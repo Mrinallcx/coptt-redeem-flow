@@ -44,6 +44,8 @@ import {
   type CopperPriceHistory,
   type CopperPriceRange,
 } from "@/lib/api"
+import { DEV_BYPASS_AUTH } from "@/lib/dev-bypass-auth"
+import { demoPriceHistory } from "@/lib/demo-data"
 
 const RANGES: Array<{ value: CopperPriceRange; label: string }> = [
   { value: "24h", label: "24H" },
@@ -75,6 +77,12 @@ export function CopperPriceChart({
   const [loading, setLoading] = useState(true)
 
   const fetchHistory = useCallback(async (r: CopperPriceRange) => {
+    if (DEV_BYPASS_AUTH) {
+      setHistory(demoPriceHistory(r))
+      setError(null)
+      setLoading(false)
+      return
+    }
     try {
       const h = await copttApi.getPriceHistory(r)
       setHistory(h)
