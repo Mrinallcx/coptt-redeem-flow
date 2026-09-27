@@ -13,6 +13,7 @@ import {
 } from "recharts"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
+import { SensitiveText, shouldBlurField } from "@/components/sensitive-text"
 import { TrendingUpIcon, TrendingDownIcon, MinusIcon } from "lucide-react"
 
 type TokenDetail = { label: string; value: string }
@@ -226,7 +227,9 @@ function PositionCard({ position }: { position: Position }) {
       <CardContent className="pt-6 pb-3">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h3 className="text-base font-semibold leading-snug">{position.title}</h3>
+            <h3 className="text-base font-semibold leading-snug">
+              <SensitiveText text={position.title} />
+            </h3>
             <p className="mt-0.5 text-xs text-muted-foreground">{position.category}</p>
           </div>
           <Badge
@@ -352,7 +355,9 @@ function PositionCard({ position }: { position: Position }) {
                 <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
                   {d.label}
                 </p>
-                <p className="mt-0.5 text-sm font-semibold">{d.value}</p>
+                <p className="mt-0.5 text-sm font-semibold">
+                  <SensitiveText text={d.value} blurAll={shouldBlurField(d.label)} />
+                </p>
               </div>
             ) : (
               <div key={i} />

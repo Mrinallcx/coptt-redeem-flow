@@ -7,6 +7,7 @@ import { ArrowRightIcon, LockIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { CopperPriceCard } from "@/components/copper-price"
 import { CopperPriceChart } from "@/components/copper-price-chart"
+import { SensitiveText, shouldBlurField } from "@/components/sensitive-text"
 import { cn } from "@/lib/utils"
 
 type OfferAccent = "copper" | "tin" | "solar" | "estate"
@@ -94,7 +95,7 @@ function ExpandableDescription({
           !expanded && "line-clamp-2",
         )}
       >
-        {text}
+        <SensitiveText text={text} />
       </p>
       {showToggle ? (
         <button
@@ -135,7 +136,6 @@ function OfferCardItem({
   const styles = isLive ? liveCopperCard : inactiveCard
   const hasSpecs = !!specs?.length
   const blurUpcoming = !isLive && (!!comingSoon || !!futureProduction)
-  const blurClass = "pointer-events-none select-none blur-[5px]"
 
   return (
     <article
@@ -185,8 +185,8 @@ function OfferCardItem({
             >
               {ticker}
             </h3>
-            <p className={cn("text-xs", styles.subtitle, blurUpcoming && blurClass)}>
-              {subtitle}
+            <p className={cn("text-xs", styles.subtitle)}>
+              <SensitiveText text={subtitle} blurAll={blurUpcoming} />
             </p>
           </div>
 
@@ -224,16 +224,11 @@ function OfferCardItem({
                 >
                   {spec.label}
                 </dt>
-                <dd
-                  className={cn(
-                    "text-xs leading-snug",
-                    styles.stat,
-                    blurUpcoming &&
-                      ["deposit", "mining partner"].includes(spec.label.toLowerCase()) &&
-                      blurClass,
-                  )}
-                >
-                  {spec.value}
+                <dd className={cn("text-xs leading-snug", styles.stat)}>
+                  <SensitiveText
+                    text={spec.value}
+                    blurAll={blurUpcoming && shouldBlurField(spec.label)}
+                  />
                 </dd>
               </div>
             ))}
