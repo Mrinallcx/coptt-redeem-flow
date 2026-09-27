@@ -134,6 +134,8 @@ function OfferCardItem({
   const isLive = !!href && !comingSoon
   const styles = isLive ? liveCopperCard : inactiveCard
   const hasSpecs = !!specs?.length
+  const blurUpcoming = !isLive && (!!comingSoon || !!futureProduction)
+  const blurClass = "pointer-events-none select-none blur-[5px]"
 
   return (
     <article
@@ -183,7 +185,9 @@ function OfferCardItem({
             >
               {ticker}
             </h3>
-            <p className={cn("text-xs", styles.subtitle)}>{subtitle}</p>
+            <p className={cn("text-xs", styles.subtitle, blurUpcoming && blurClass)}>
+              {subtitle}
+            </p>
           </div>
 
           {futureProduction ? (
@@ -224,9 +228,9 @@ function OfferCardItem({
                   className={cn(
                     "text-xs leading-snug",
                     styles.stat,
-                    !isLive &&
-                      spec.label.toLowerCase() === "mining partner" &&
-                      "pointer-events-none select-none blur-[5px]",
+                    blurUpcoming &&
+                      ["deposit", "mining partner"].includes(spec.label.toLowerCase()) &&
+                      blurClass,
                   )}
                 >
                   {spec.value}
@@ -388,7 +392,7 @@ export function SectionCards() {
       accent: "copper",
       comingSoon: true,
       futureProduction: true,
-      coverImage: "/copper-mine.jpg",
+      coverImage: "/copper-pit.png",
       specs: [
         {
           label: "Deposit",
@@ -421,7 +425,7 @@ export function SectionCards() {
       accent: "copper",
       comingSoon: true,
       futureProduction: true,
-      coverImage: "/copper-camp.jpg",
+      coverImage: "/copper-pit-dusk.png",
       specs: [
         {
           label: "Deposit",
