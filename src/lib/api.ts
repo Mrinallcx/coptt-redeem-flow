@@ -385,6 +385,126 @@ export interface CopperPricePoint {
   usd_per_lb: number;
 }
 
+
+// --- Chain transactions -------------------------------------------------
+
+/**
+ * A transaction ready for `eth_sendTransaction`.
+ *
+ * The backend encodes these rather than shipping an ABI encoder to the
+ * browser. `buy()` alone carries a nested tuple, two dynamic byte strings and
+ * a bytes32[]; the ABI that can be checked against the deployed contract
+ * lives server-side, and its selectors are pinned by tests there.
+ */
+export interface TxRequest {
+  to: string;
+  data: string;
+  value: string;
+}
+
+export interface PurchaseConfig {
+  purchase_controller: string;
+  payment_token: string;
+  payment_symbol: string;
+  payment_decimals: number;
+  chain_id: number;
+  spread_bps: number;
+  quote_validity_secs: number;
+  min_amount_lb: number;
+  max_amount_lb: number;
+  paused: boolean;
+  accepting: boolean;
+}
+
+export interface PurchaseQuote {
+  auth_id: string;
+  purchase_controller: string;
+  chain_id: number;
+  pricing: {
+    amount_lb: number;
+    index_usd_per_lb: number;
+    spread_bps: number;
+    effective_usd_per_lb: number;
+    total_usd: number;
+    payment_symbol: string;
+    payment_decimals: number;
+    price_stale: boolean;
+    price_source: string;
+  };
+  approval: {
+    token: string;
+    spender: string;
+    required_amount: string;
+    current_allowance: string;
+    current_balance: string;
+    needs_approval: boolean;
+    sufficient_funds: boolean;
+  };
+  approve_tx?: TxRequest;
+  buy_tx: TxRequest;
+  expires_at: string;
+}
+
+export interface RedemptionConfig {
+  redemption_controller: string;
+  coptt_contract: string;
+  chain_id: number;
+  min_redemption_lb: number;
+  fulfilment_window_days: number;
+  escrowed_lb: number;
+  escrow_solvent: boolean;
+  paused: boolean;
+  accepting: boolean;
+  approval_spender: string;
+}
+
+export type RedemptionStatus =
+  | "requested"
+  | "fulfilling"
+  | "settled"
+  | "cancelled"
+  | "expired";
+
+export interface Redemption {
+  redemption_id: string;
+  holder: string;
+  amount_lb: number;
+  status: RedemptionStatus;
+  delivery_ref: string;
+  requested_at: string;
+  deadline: string;
+  request_tx?: string;
+  settle_tx?: string;
+  settled_at?: string | null;
+}
+
+export interface CopttrSeries {
+  series_id: string;
+  mine_id: string;
+  token: string;
+  name: string;
+  symbol: string;
+  status: string;
+  cap_lb: number;
+  issued_lb: number;
+  allocated_lb: number;
+  converted_lb: number;
+  earliest_conversion: string;
+  long_stop_date: string;
+}
+
+export interface CopttrHolding {
+  series_id: string;
+  symbol: string;
+  name: string;
+  token: string;
+  status: string;
+  balance_lb: number;
+  claimable_lb: number;
+  earliest_conversion: string;
+  long_stop_date: string;
+}
+
 /** Windows `GET /coptt/price/history` accepts. */
 export type CopperPriceRange = "24h" | "7d" | "30d" | "90d" | "1y";
 
@@ -458,6 +578,112 @@ export const copttApi = {
    *   - 503 chain_not_configured   — backend RPC/key not set
    *   - 502 mint_failed            — on-chain revert / RPC failure
    */
+  // --- Buying ----------------------------------------------------------
+
+  /** Public. Rail, spread, limits, and whether we are accepting orders. */
+  getPurchaseConfig() {
+    return request<PurchaseConfig>("/coptt/purchase/config");
+  },
+
+  /**
+   * Price an order and get back signed, ready-to-send transactions.
+   *
+   * The quote expires — `expires_at` is short by design, because the price is
+   * fixed off-chain when the buyer clicks and the spread only covers so much
+   * drift. A quote that has lapsed must be re-requested, not retried.
+   */
+  requestQuote(amountLb: number) {
+    return request<PurchaseQuote>("/coptt/purchase/quote", {
+      method: "POST",
+      body: JSON.stringify({ amount_lb: amountLb }),
+    });
+  },
+
+  getPurchase(id: string) {
+    return request<{
+      id: string;
+      status: string;
+      amount_lb: number;
+      payment_amount: string;
+      tx_hash?: string;
+      expires_at: string;
+    }>(`/coptt/purchase/${encodeURIComponent(id)}`);
+  },
+
+  // --- Redemption ------------------------------------------------------
+
+  /** Public: the exit terms should be readable before anyone signs up. */
+  getRedemptionConfig() {
+    return request<RedemptionConfig>("/coptt/redemption/config");
+  },
+
+  listRedemptions() {
+    return request<{ redemptions: Redemption[]; count: number }>("/coptt/redemptions");
+  },
+
+  /** Returns the approval and the request; both are sent by the holder. */
+  prepareRedemption(amountLb: number, deliveryRef = "") {
+    return request<{
+      amount_lb: number;
+      holder: string;
+      approve_tx: TxRequest;
+      request_tx: TxRequest;
+      chain_id: number;
+      delivery_ref: string;
+    }>("/coptt/redemptions/prepare", {
+      method: "POST",
+      body: JSON.stringify({ amount_lb: amountLb, delivery_ref: deliveryRef }),
+    });
+  },
+
+  prepareCancelRedemption(redemptionId: string) {
+    return request<{ cancel_tx: TxRequest; chain_id: number }>(
+      `/coptt/redemptions/${encodeURIComponent(redemptionId)}/prepare-cancel`,
+      { method: "POST" },
+    );
+  },
+
+  // --- COPTTR ----------------------------------------------------------
+
+  listSeries() {
+    return request<{ series: CopttrSeries[]; count: number }>("/coptt/series");
+  },
+
+  /** Holdings and today's entitlement, read from chain rather than cached. */
+  listHoldings() {
+    return request<{
+      holdings: CopttrHolding[];
+      count: number;
+      conversion_contract: string;
+      chain_id: number;
+    }>("/coptt/copttr/holdings");
+  },
+
+  listConversions() {
+    return request<{
+      conversions: Array<{
+        series_id: string;
+        amount_lb: number;
+        tx_hash: string;
+        converted_at: string;
+      }>;
+      count: number;
+    }>("/coptt/copttr/conversions");
+  },
+
+  /** One transaction — the manager burns as an agent, so no approval step. */
+  prepareConvert(seriesId: string, amountLb: number) {
+    return request<{
+      series_id: string;
+      amount_lb: number;
+      convert_tx: TxRequest;
+      chain_id: number;
+    }>(`/coptt/copttr/${encodeURIComponent(seriesId)}/prepare-convert`, {
+      method: "POST",
+      body: JSON.stringify({ amount_lb: amountLb }),
+    });
+  },
+
   mint(accessToken: string, amountLbs: number) {
     return request<{
       tx_hash: string;

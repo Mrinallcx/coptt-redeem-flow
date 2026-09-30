@@ -1,6 +1,8 @@
 import { AppSidebar } from "@/components/app-sidebar"
 import { InvestmentPositions } from "@/components/investment-positions"
 import { InvestmentSummaryCards } from "@/components/investment-summary-cards"
+import { CopttrPanel } from "@/components/copttr-panel"
+import { RedeemPanel } from "@/components/redeem-panel"
 import { SiteHeader } from "@/components/site-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 
@@ -22,6 +24,10 @@ export default function Page() {
             <div className="flex flex-col gap-6 py-4 md:gap-8 md:py-6">
               <InvestmentSummaryCards />
               <InvestmentPositions />
+              <div className="grid gap-6 px-4 lg:grid-cols-2 lg:px-6">
+                <CopttrPanel />
+                <RedeemPanel />
+              </div>
             </div>
           </div>
         </div>
