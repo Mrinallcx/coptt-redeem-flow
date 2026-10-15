@@ -48,7 +48,9 @@ function getProvider(): EthereumProvider | null {
   if (typeof window === "undefined") return null
   const eth = (window as Window & { ethereum?: EthereumProvider }).ethereum
   if (!eth) return null
-  const list = Array.isArray(eth.providers) && eth.providers.length > 0 ? eth.providers : [eth]
+  const providers = eth.providers as EthereumProvider[] | undefined
+  const list: EthereumProvider[] =
+    Array.isArray(providers) && providers.length > 0 ? providers : [eth]
   return (
     list.find((p) => p.isMetaMask && !p.isPhantom) ??
     list.find((p) => !p.isPhantom) ??
