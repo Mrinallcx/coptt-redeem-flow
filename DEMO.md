@@ -45,9 +45,9 @@ cookie gate.
 Carried over from the authenticated build, and more consequential once
 anyone can reach the page:
 
-- The checkout's **bank transfer panel** shows beneficiary, bank and IBAN
-  with "use the reference exactly so we can match your transfer". The IBAN
-  is a placeholder.
+- The checkout's **bank transfer panel** shows US wire details (beneficiary,
+  bank, routing, account) with "use the reference exactly so we can match
+  your transfer". All values are placeholders.
 - **Confirm** runs a 700ms timer, calls nothing, and reports the
   investment as "recorded".
 - **Funding figures** (CHF 4,312,000 raised, 134 investors, 77%, 15 days

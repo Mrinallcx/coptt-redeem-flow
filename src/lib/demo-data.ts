@@ -7,7 +7,13 @@
 //
 // Every number here is invented. Nothing in this file should ever be
 // presented as market data or as a real holding.
-import type { CopperPrice, CopperPriceHistory, CopperPriceRange } from "@/lib/api"
+import type {
+  CopperPrice,
+  CopperPriceHistory,
+  CopperPriceRange,
+  PurchaseConfig,
+  PurchaseQuote,
+} from "@/lib/api"
 
 /** Matches the backend's PYTH_MOCK_PRICE_USD_PER_LB. */
 export const DEMO_USD_PER_LB = 6.77
@@ -98,5 +104,62 @@ export function demoPrice(): CopperPrice {
     source: "mock",
     fetched_at: now,
     feed_symbol: "Commodities.Index.CU/USD",
+  }
+}
+
+const DEMO_CHAIN_ID = 11155111
+const ZERO = "0x0000000000000000000000000000000000000000"
+
+/** Public purchase rail settings for the no-backend demo build. */
+export function demoPurchaseConfig(): PurchaseConfig {
+  return {
+    purchase_controller: ZERO,
+    payment_token: ZERO,
+    payment_symbol: "USDC",
+    payment_decimals: 6,
+    chain_id: DEMO_CHAIN_ID,
+    spread_bps: 50,
+    quote_validity_secs: 600,
+    min_amount_lb: 1,
+    max_amount_lb: 100_000,
+    paused: false,
+    accepting: true,
+  }
+}
+
+/** Indicative quote for showcase — no wallet transactions are sent. */
+export function demoPurchaseQuote(amountLb: number): PurchaseQuote {
+  const spreadBps = 50
+  const index = DEMO_USD_PER_LB
+  const effective = index * (1 + spreadBps / 10_000)
+  const totalUsd = Math.round(amountLb * effective * 100) / 100
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString()
+
+  return {
+    auth_id: "demo-quote",
+    purchase_controller: ZERO,
+    chain_id: DEMO_CHAIN_ID,
+    pricing: {
+      amount_lb: amountLb,
+      index_usd_per_lb: index,
+      spread_bps: spreadBps,
+      effective_usd_per_lb: effective,
+      total_usd: totalUsd,
+      payment_symbol: "USDC",
+      payment_decimals: 6,
+      price_stale: false,
+      price_source: "mock",
+    },
+    approval: {
+      token: ZERO,
+      spender: ZERO,
+      required_amount: "0",
+      current_allowance: "0",
+      current_balance: "1000000000000",
+      needs_approval: false,
+      sufficient_funds: true,
+    },
+    buy_tx: { to: ZERO, data: "0x", value: "0" },
+    expires_at: expiresAt,
   }
 }

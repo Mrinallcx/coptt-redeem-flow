@@ -1,13 +1,15 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react"
 import { toast } from "sonner"
 import {
   AlertTriangleIcon,
   ArrowRightIcon,
   CheckIcon,
   ExternalLinkIcon,
+  LandmarkIcon,
   Loader2Icon,
+  WalletIcon,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -34,25 +36,17 @@ import {
 } from "@/lib/wallet"
 import { USE_RAINBOWKIT } from "@/lib/wallet-mode"
 import { cn } from "@/lib/utils"
+import { DEV_BYPASS_AUTH } from "@/lib/dev-bypass-auth"
+import { demoPurchaseConfig, demoPurchaseQuote } from "@/lib/demo-data"
 
-/**
- * Buying COPTT.
- *
- * The flow mirrors what the contracts actually require, rather than hiding it:
- * quote → approve (only if needed) → buy. Payment and issuance happen in the
- * same transaction, so there is no state where the buyer has paid and holds
- * nothing.
- *
- * The quote expires. That is not a UI detail to smooth over — the price is
- * fixed off-chain when the buyer clicks and the spread only covers so much
- * drift, so a lapsed quote is re-requested rather than retried.
- */
-
-type Step = "amount" | "review" | "working" | "done"
+type PayMethod = "wallet" | "bank"
+type Step = "amount" | "price" | "method" | "confirm" | "working" | "done"
 
 export function BuyFlow({ className }: { className?: string }) {
   const [open, setOpen] = useState(false)
   const [step, setStep] = useState<Step>("amount")
+  const [method, setMethod] = useState<PayMethod>("wallet")
+  const [bankReference, setBankReference] = useState<string | null>(null)
 
   const [config, setConfig] = useState<PurchaseConfig | null>(null)
   const [quote, setQuote] = useState<PurchaseQuote | null>(null)
@@ -68,12 +62,14 @@ export function BuyFlow({ className }: { className?: string }) {
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null)
 
   useEffect(() => {
+    if (DEV_BYPASS_AUTH) {
+      setConfig(demoPurchaseConfig())
+      return
+    }
     copttApi.getPurchaseConfig().then(setConfig).catch(() => setConfig(null))
     if (!USE_RAINBOWKIT) currentAccount().then(setWallet)
   }, [])
 
-  // A visible countdown, because a quote that silently lapses and then
-  // reverts is the worst version of this.
   useEffect(() => {
     if (!quote || step === "done") return
     const tick = () => {
@@ -85,8 +81,16 @@ export function BuyFlow({ className }: { className?: string }) {
     return () => clearInterval(id)
   }, [quote, step])
 
+  useEffect(() => {
+    if (step === "confirm" && method === "bank" && !bankReference) {
+      setBankReference(`COPTT-${Date.now().toString(36).toUpperCase()}`)
+    }
+  }, [step, method, bankReference])
+
   const reset = useCallback(() => {
     setStep("amount")
+    setMethod("wallet")
+    setBankReference(null)
     setQuote(null)
     setBusy(false)
     setStatusLine("")
@@ -111,9 +115,11 @@ export function BuyFlow({ className }: { className?: string }) {
     setBusy(true)
     setError(null)
     try {
-      const q = await copttApi.requestQuote(lb)
+      const q = DEV_BYPASS_AUTH
+        ? demoPurchaseQuote(lb)
+        : await copttApi.requestQuote(lb)
       setQuote(q)
-      setStep("review")
+      setStep("price")
     } catch (err) {
       setError(explainQuoteError(err))
     } finally {
@@ -132,8 +138,20 @@ export function BuyFlow({ className }: { className?: string }) {
     }
   }
 
-  const buy = async () => {
-    if (!quote || !connectedWallet) return
+  const completeWalletPurchase = async () => {
+    if (!quote) return
+    if (DEV_BYPASS_AUTH) {
+      setBusy(true)
+      setError(null)
+      setStep("working")
+      setStatusLine("Confirming wallet payment…")
+      await new Promise((resolve) => setTimeout(resolve, 700))
+      setStep("done")
+      toast.success(`Wallet checkout complete · ${quote.pricing.amount_lb} lb COPTT`)
+      setBusy(false)
+      return
+    }
+    if (!connectedWallet) return
     setBusy(true)
     setError(null)
     setStep("working")
@@ -141,8 +159,6 @@ export function BuyFlow({ className }: { className?: string }) {
     try {
       await ensureChain(quote.chain_id)
 
-      // Approve only when the allowance is short. Prompting for an approval
-      // the buyer already granted reads as a second charge.
       if (quote.approve_tx) {
         setStatusLine(`Approve ${quote.pricing.payment_symbol} spending…`)
         const approveHash = await sendTx(connectedWallet, quote.approve_tx)
@@ -160,9 +176,6 @@ export function BuyFlow({ className }: { className?: string }) {
       setStatusLine("Waiting for the purchase to confirm…")
       const receipt = await waitForReceipt(hash)
       if (receipt.status !== "success") {
-        // Payment and mint share a transaction, so a revert means nothing
-        // moved. Worth saying, because "failed" otherwise invites the fear
-        // that the money went somewhere.
         throw new Error(
           "The purchase reverted, so nothing was charged. The quote may have expired — request a new one.",
         )
@@ -172,19 +185,52 @@ export function BuyFlow({ className }: { className?: string }) {
       toast.success(`Bought ${quote.pricing.amount_lb} lb of COPTT`)
     } catch (err) {
       if (isUserRejection(err)) {
-        setStep("review")
+        setStep("confirm")
         setStatusLine("")
       } else {
         setError(err instanceof Error ? err.message : "Something went wrong")
-        setStep("review")
+        setStep("confirm")
       }
     } finally {
       setBusy(false)
     }
   }
 
+  const completeBankTransfer = async () => {
+    if (!quote) return
+    setBusy(true)
+    await new Promise((resolve) => setTimeout(resolve, 700))
+    setBusy(false)
+    setStep("done")
+    toast.success(
+      bankReference
+        ? `Bank transfer ${bankReference} recorded. We'll match it when funds arrive.`
+        : "Bank transfer recorded.",
+    )
+  }
+
   const expired = secondsLeft !== null && secondsLeft <= 0
   const accepting = config?.accepting ?? false
+
+  const sheetTitle = useMemo(() => {
+    if (step === "done") {
+      return method === "wallet" ? "Purchase complete" : "Transfer recorded"
+    }
+    if (step === "amount") return "Buy COPTT"
+    if (step === "price") return "Your price"
+    if (step === "method") return "Payment method"
+    if (step === "confirm") {
+      return method === "wallet" ? "Pay with wallet" : "Bank transfer"
+    }
+    return "Buy COPTT"
+  }, [step, method])
+
+  const totalLabel = quote
+    ? `${quote.pricing.total_usd.toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })} ${quote.pricing.payment_symbol}`
+    : "—"
 
   return (
     <>
@@ -212,13 +258,13 @@ export function BuyFlow({ className }: { className?: string }) {
       <Sheet open={open} onOpenChange={close}>
         <SheetContent side="right" className="w-full gap-0 sm:max-w-md">
           <SheetHeader className="border-b">
-            <SheetTitle>
-              {step === "done" ? "Purchase complete" : "Buy COPTT"}
-            </SheetTitle>
+            <SheetTitle>{sheetTitle}</SheetTitle>
             <SheetDescription>
-              {config
-                ? `Minimum ${config.min_amount_lb} lb · paid in ${config.payment_symbol}`
-                : "Loading…"}
+              {step === "done"
+                ? "You can close this panel."
+                : config
+                  ? `Minimum ${config.min_amount_lb} lb · paid in ${config.payment_symbol}`
+                  : "Loading…"}
             </SheetDescription>
           </SheetHeader>
 
@@ -256,69 +302,81 @@ export function BuyFlow({ className }: { className?: string }) {
               </div>
             ) : null}
 
-            {quote && (step === "review" || step === "working") ? (
+            {quote && step === "price" ? (
+              <QuoteBreakdown
+                quote={quote}
+                expired={expired}
+                secondsLeft={secondsLeft}
+                showWalletHints
+              />
+            ) : null}
+
+            {step === "method" ? (
+              <div className="space-y-3">
+                <PayOption
+                  selected={method === "wallet"}
+                  onSelect={() => setMethod("wallet")}
+                  icon={<WalletIcon className="size-4" />}
+                  title="Wallet"
+                  detail="Connect your wallet and confirm on-chain."
+                />
+                <PayOption
+                  selected={method === "bank"}
+                  onSelect={() => setMethod("bank")}
+                  icon={<LandmarkIcon className="size-4" />}
+                  title="Bank transfer"
+                  detail="Wire funds using the details we provide."
+                />
+              </div>
+            ) : null}
+
+            {quote && step === "confirm" && method === "wallet" ? (
               <div className="space-y-4">
-                <dl className="divide-y rounded-lg border text-sm">
-                  <Row label="Amount" value={`${quote.pricing.amount_lb} lb`} />
-                  <Row
-                    label="Index price"
-                    value={`$${quote.pricing.index_usd_per_lb.toFixed(4)} / lb`}
-                  />
-                  <Row
-                    label="Spread"
-                    value={`${(quote.pricing.spread_bps / 100).toFixed(2)}%`}
-                  />
-                  <Row
-                    label="Your price"
-                    value={`$${quote.pricing.effective_usd_per_lb.toFixed(4)} / lb`}
-                  />
-                  <Row
-                    label="Total"
-                    value={`${quote.pricing.total_usd.toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })} ${quote.pricing.payment_symbol}`}
-                    strong
-                  />
-                </dl>
-
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">Quote expires</span>
-                  <Badge
-                    variant="outline"
-                    className={cn(
-                      expired && "border-destructive/40 text-destructive",
-                      !expired && secondsLeft !== null && secondsLeft < 30 && "text-amber-600",
-                    )}
-                  >
-                    {expired
-                      ? "Expired"
-                      : secondsLeft !== null
-                        ? `${Math.floor(secondsLeft / 60)}:${String(secondsLeft % 60).padStart(2, "0")}`
-                        : "—"}
-                  </Badge>
-                </div>
-
-                {!quote.approval.sufficient_funds ? (
+                <OrderSummary quote={quote} totalLabel={totalLabel} />
+                {connectedWallet ? (
+                  <p className="rounded-lg border bg-muted/40 px-3 py-2 text-sm">
+                    Connected{" "}
+                    <span className="font-mono font-medium">
+                      {shortAddress(connectedWallet)}
+                    </span>
+                  </p>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Connect a wallet to complete checkout.
+                  </p>
+                )}
+                {!DEV_BYPASS_AUTH && !quote.approval.sufficient_funds ? (
                   <p className="rounded-lg border border-amber-500/40 bg-amber-50/60 px-3 py-2 text-xs dark:bg-amber-950/20">
-                    Not enough {quote.pricing.payment_symbol} in this wallet to
-                    complete the purchase.
+                    Not enough {quote.pricing.payment_symbol} in this wallet.
                   </p>
                 ) : null}
+              </div>
+            ) : null}
 
-                {quote.approve_tx ? (
-                  <p className="text-xs text-muted-foreground">
-                    Two wallet prompts: one to approve{" "}
-                    {quote.pricing.payment_symbol} spending, one to buy.
-                  </p>
-                ) : null}
+            {quote && step === "confirm" && method === "bank" ? (
+              <div className="space-y-4">
+                <OrderSummary quote={quote} totalLabel={totalLabel} />
+                <dl className="divide-y rounded-lg border text-sm">
+                  <BankRow label="Beneficiary" value="Toto Finance Holdings LLC" />
+                  <BankRow label="Bank" value="JPMorgan Chase Bank, N.A." />
+                  <BankRow label="Routing (ABA)" value="021000021" />
+                  <BankRow label="Account number" value="1234567890" />
+                  <BankRow label="Reference" value={bankReference ?? "—"} />
+                  <BankRow label="Amount" value={totalLabel} />
+                </dl>
+                <p className="text-xs text-muted-foreground">
+                  Use the reference exactly so we can match your transfer.
+                </p>
+              </div>
+            ) : null}
 
-                {step === "working" ? (
-                  <p className="flex items-center gap-2 text-sm">
-                    <Loader2Icon className="size-4 animate-spin" />
-                    {statusLine}
-                  </p>
-                ) : null}
+            {quote && step === "working" ? (
+              <div className="space-y-4">
+                <QuoteBreakdown quote={quote} expired={expired} secondsLeft={secondsLeft} />
+                <p className="flex items-center gap-2 text-sm">
+                  <Loader2Icon className="size-4 animate-spin" />
+                  {statusLine}
+                </p>
               </div>
             ) : null}
 
@@ -328,9 +386,15 @@ export function BuyFlow({ className }: { className?: string }) {
                   <CheckIcon className="size-5" />
                 </span>
                 <p className="text-sm font-semibold">
-                  {quote.pricing.amount_lb} lb COPTT is in your wallet
+                  {method === "wallet"
+                    ? `${quote.pricing.amount_lb} lb COPTT is in your wallet`
+                    : "Bank transfer instructions saved"}
                 </p>
-                {txHash ? (
+                <p className="text-sm text-muted-foreground">
+                  {totalLabel} for {quote.pricing.amount_lb} lb
+                  {method === "bank" && bankReference ? ` · ${bankReference}` : ""}
+                </p>
+                {method === "wallet" && txHash ? (
                   <a
                     href={explorerTx(txHash, quote.chain_id)}
                     target="_blank"
@@ -356,27 +420,70 @@ export function BuyFlow({ className }: { className?: string }) {
               </Button>
             ) : null}
 
-            {step === "review" ? (
+            {step === "price" ? (
               <div className="grid grid-cols-2 gap-2">
                 <Button variant="outline" onClick={reset} disabled={busy}>
                   Back
                 </Button>
-                {!connectedWallet ? (
-                  <WalletConnectButton
-                    onLegacyConnect={connectWallet}
-                  />
-                ) : expired ? (
+                {expired ? (
                   <Button className="bg-[#B87333] text-white hover:bg-[#9A5B2E]" onClick={getQuote}>
                     New price
                   </Button>
                 ) : (
                   <Button
                     className="bg-[#B87333] text-white hover:bg-[#9A5B2E]"
-                    onClick={buy}
-                    disabled={busy || !quote?.approval.sufficient_funds}
+                    onClick={() => setStep("method")}
+                  >
+                    Continue
+                  </Button>
+                )}
+              </div>
+            ) : null}
+
+            {step === "method" ? (
+              <div className="grid grid-cols-2 gap-2">
+                <Button variant="outline" onClick={() => setStep("price")}>
+                  Back
+                </Button>
+                <Button
+                  className="bg-[#B87333] text-white hover:bg-[#9A5B2E]"
+                  onClick={() => setStep("confirm")}
+                >
+                  Continue
+                </Button>
+              </div>
+            ) : null}
+
+            {step === "confirm" ? (
+              <div className="grid grid-cols-2 gap-2">
+                <Button variant="outline" onClick={() => setStep("method")} disabled={busy}>
+                  Back
+                </Button>
+                {method === "wallet" &&
+                !DEV_BYPASS_AUTH &&
+                !connectedWallet ? (
+                  <WalletConnectButton onLegacyConnect={connectWallet} />
+                ) : method === "wallet" ? (
+                  <Button
+                    className="bg-[#B87333] text-white hover:bg-[#9A5B2E]"
+                    onClick={completeWalletPurchase}
+                    disabled={
+                      busy ||
+                      (!DEV_BYPASS_AUTH &&
+                        (!connectedWallet || !quote?.approval.sufficient_funds))
+                    }
                   >
                     {busy ? <Loader2Icon className="animate-spin" /> : <CheckIcon />}
-                    Buy
+                    Confirm payment
+                  </Button>
+                ) : (
+                  <Button
+                    className="bg-[#B87333] text-white hover:bg-[#9A5B2E]"
+                    onClick={completeBankTransfer}
+                    disabled={busy}
+                  >
+                    {busy ? <Loader2Icon className="animate-spin" /> : <CheckIcon />}
+                    I&apos;ve sent the wire
                   </Button>
                 )}
               </div>
@@ -394,15 +501,144 @@ export function BuyFlow({ className }: { className?: string }) {
               </Button>
             ) : null}
           </SheetFooter>
-
-          {connectedWallet && step !== "done" ? (
-            <p className="border-t px-4 py-2 text-xs text-muted-foreground">
-              Paying from <span className="font-mono">{shortAddress(connectedWallet)}</span>
-            </p>
-          ) : null}
         </SheetContent>
       </Sheet>
     </>
+  )
+}
+
+function OrderSummary({
+  quote,
+  totalLabel,
+}: {
+  quote: PurchaseQuote
+  totalLabel: string
+}) {
+  return (
+    <div className="rounded-lg border bg-muted/30 px-3 py-3 text-sm">
+      <p className="font-semibold tabular-nums">{totalLabel}</p>
+      <p className="mt-1 text-xs text-muted-foreground">
+        {quote.pricing.amount_lb} lb COPTT · $
+        {quote.pricing.effective_usd_per_lb.toFixed(4)} / lb
+      </p>
+    </div>
+  )
+}
+
+function QuoteBreakdown({
+  quote,
+  expired,
+  secondsLeft,
+  showWalletHints,
+}: {
+  quote: PurchaseQuote
+  expired: boolean
+  secondsLeft: number | null
+  showWalletHints?: boolean
+}) {
+  return (
+    <div className="space-y-4">
+      <dl className="divide-y rounded-lg border text-sm">
+        <Row label="Amount" value={`${quote.pricing.amount_lb} lb`} />
+        <Row
+          label="Index price"
+          value={`$${quote.pricing.index_usd_per_lb.toFixed(4)} / lb`}
+        />
+        <Row label="Spread" value={`${(quote.pricing.spread_bps / 100).toFixed(2)}%`} />
+        <Row
+          label="Your price"
+          value={`$${quote.pricing.effective_usd_per_lb.toFixed(4)} / lb`}
+        />
+        <Row
+          label="Total"
+          value={`${quote.pricing.total_usd.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })} ${quote.pricing.payment_symbol}`}
+          strong
+        />
+      </dl>
+
+      <div className="flex items-center justify-between text-xs">
+        <span className="text-muted-foreground">Quote expires</span>
+        <Badge
+          variant="outline"
+          className={cn(
+            expired && "border-destructive/40 text-destructive",
+            !expired && secondsLeft !== null && secondsLeft < 30 && "text-amber-600",
+          )}
+        >
+          {expired
+            ? "Expired"
+            : secondsLeft !== null
+              ? `${Math.floor(secondsLeft / 60)}:${String(secondsLeft % 60).padStart(2, "0")}`
+              : "—"}
+        </Badge>
+      </div>
+
+      {showWalletHints && !quote.approval.sufficient_funds ? (
+        <p className="rounded-lg border border-amber-500/40 bg-amber-50/60 px-3 py-2 text-xs dark:bg-amber-950/20">
+          Wallet checkout needs enough {quote.pricing.payment_symbol}. Bank transfer is
+          available on the next step.
+        </p>
+      ) : null}
+
+      {showWalletHints && quote.approve_tx ? (
+        <p className="text-xs text-muted-foreground">
+          Wallet checkout may ask you to approve {quote.pricing.payment_symbol} spending,
+          then confirm the purchase.
+        </p>
+      ) : null}
+    </div>
+  )
+}
+
+function PayOption({
+  selected,
+  onSelect,
+  icon,
+  title,
+  detail,
+}: {
+  selected: boolean
+  onSelect: () => void
+  icon: ReactNode
+  title: string
+  detail: string
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={cn(
+        "flex w-full items-start gap-3 rounded-lg border px-3 py-3 text-left transition-colors",
+        selected
+          ? "border-[#B87333]/50 bg-amber-50/60 dark:bg-amber-950/20"
+          : "hover:bg-muted/50",
+      )}
+    >
+      <span
+        className={cn(
+          "mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-md border",
+          selected ? "border-[#B87333]/40 text-[#9A5B2E]" : "text-muted-foreground",
+        )}
+      >
+        {icon}
+      </span>
+      <span>
+        <span className="block text-sm font-medium">{title}</span>
+        <span className="mt-0.5 block text-xs text-muted-foreground">{detail}</span>
+      </span>
+    </button>
+  )
+}
+
+function BankRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-baseline justify-between gap-3 px-3 py-2.5">
+      <dt className="text-xs text-muted-foreground">{label}</dt>
+      <dd className="text-right font-medium tabular-nums">{value}</dd>
+    </div>
   )
 }
 
@@ -417,7 +653,6 @@ function Row({ label, value, strong }: { label: string; value: string; strong?: 
   )
 }
 
-/** Turns the backend's error codes into something a buyer can act on. */
 function explainQuoteError(err: unknown): string {
   if (err instanceof ApiRequestError) {
     switch (err.error) {
