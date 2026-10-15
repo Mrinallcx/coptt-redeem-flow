@@ -4,7 +4,7 @@
 //
 // Three-step UX, gated in order:
 //
-//   1. ConnectWallet      — MetaMask injected, eth_requestAccounts
+//   1. ConnectWallet      — RainbowKit modal (legacy injected path is flagged off)
 //   2. SignChallenge/Bind — POST /wallets/challenge → personal_sign → POST /wallets/bind
 //   3. Mint               — amount input → POST /coptt/mint (KYC-gated server-side)
 //
@@ -12,16 +12,16 @@
 // is disabled and we point them at /kyc. The backend ALSO enforces the
 // gate (RequireApprovedKYC middleware) so we never rely on the UI alone.
 //
-// We talk to MetaMask via `window.ethereum` directly — no wagmi / ethers
-// dependency. The only calls we make are `eth_requestAccounts`,
-// `eth_chainId`, `wallet_switchEthereumChain`, and `personal_sign`.
+// Live connect uses RainbowKit + wagmi. The injected `window.ethereum`
+// helpers (`eth_requestAccounts`, `eth_chainId`,
+// `wallet_switchEthereumChain`, `personal_sign`) stay below and run only
+// when USE_RAINBOWKIT is false.
 
 import { useCallback, useEffect, useState, type ReactNode } from "react"
 import { toast } from "sonner"
 import {
   CircleDollarSignIcon,
   Loader2Icon,
-  WalletIcon,
   CheckIcon,
   ExternalLinkIcon,
   LockIcon,
@@ -33,8 +33,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
 
+import { useAccount, useSignMessage, useSwitchChain } from "wagmi"
+import { sepolia } from "wagmi/chains"
+
 import { useAuth } from "@/contexts/auth-context"
 import { DEV_BYPASS_AUTH } from "@/lib/dev-bypass-auth"
+import { USE_RAINBOWKIT } from "@/lib/wallet-mode"
+import { WalletConnectButton } from "@/components/wallet-connect-button"
 import {
   ApiRequestError,
   copttApi,
@@ -208,6 +213,9 @@ export function BuyCopttCard() {
   const [connecting, setConnecting] = useState(false)
   const [binding, setBinding] = useState(false)
   const [minting, setMinting] = useState(false)
+  const { address, isConnected, chainId } = useAccount()
+  const { signMessageAsync } = useSignMessage()
+  const { switchChainAsync } = useSwitchChain()
 
   // Mint form state.
   const [amount, setAmount] = useState("1")
@@ -215,8 +223,18 @@ export function BuyCopttCard() {
 
   // ---- Initial probe: provider present? wallet already on file? ----
   useEffect(() => {
+    if (USE_RAINBOWKIT) {
+      setHasProvider(true)
+      return
+    }
     setHasProvider(!!getProvider())
   }, [])
+
+  useEffect(() => {
+    if (!USE_RAINBOWKIT) return
+    setBrowserAccount(isConnected && address ? address.toLowerCase() : null)
+    setChainOk(chainId === sepolia.id)
+  }, [address, isConnected, chainId])
 
   // Public server config: KYC gate status + chain id. Public endpoint
   // so we don't need to wait for auth.
@@ -268,9 +286,9 @@ export function BuyCopttCard() {
   }, [accessToken])
 
   // Listen for account/chain changes only after the user has connected.
-  // Probing eth_accounts / eth_chainId (or even attaching listeners) on
-  // mount makes Phantom open as soon as "View offer" loads this card.
+  // Disabled while RainbowKit owns the session.
   useEffect(() => {
+    if (USE_RAINBOWKIT) return
     if (!browserAccount) return
     const provider = getProvider()
     if (!provider?.on) return
@@ -294,7 +312,9 @@ export function BuyCopttCard() {
   }, [browserAccount])
 
   // ---- Connect: prompt MetaMask + switch chain if needed --------------
+  // Disabled while USE_RAINBOWKIT is true.
   const connect = useCallback(async () => {
+    if (USE_RAINBOWKIT) return
     const provider = getProvider()
     if (!provider) {
       toast.error("MetaMask not detected — install it to continue.")
@@ -344,19 +364,26 @@ export function BuyCopttCard() {
   // ---- Bind: challenge → personal_sign → /wallets/bind ----------------
   const bind = useCallback(async () => {
     if (!accessToken || !browserAccount) return
-    const provider = getProvider()
-    if (!provider) return
 
     setBinding(true)
     try {
       const challenge = await walletApi.createChallenge(accessToken)
-      // personal_sign params: [message, address]. We pass the message as
-      // a hex string OR utf8 — MetaMask accepts both; raw utf8 is what
-      // the user sees in the popup, which is what we want.
-      const signature = (await provider.request({
-        method: "personal_sign",
-        params: [challenge.message, browserAccount],
-      })) as string
+      let signature: string
+      if (USE_RAINBOWKIT) {
+        if (chainId !== sepolia.id) {
+          await switchChainAsync({ chainId: sepolia.id })
+        }
+        signature = await signMessageAsync({ message: challenge.message })
+      } else {
+        const provider = getProvider()
+        if (!provider) return
+        // personal_sign params: [message, address]. Kept as the fallback
+        // injected path when USE_RAINBOWKIT is false.
+        signature = (await provider.request({
+          method: "personal_sign",
+          params: [challenge.message, browserAccount],
+        })) as string
+      }
 
       const resp = await walletApi.bind(accessToken, browserAccount, signature)
       setServerWallet({
@@ -376,7 +403,7 @@ export function BuyCopttCard() {
     } finally {
       setBinding(false)
     }
-  }, [accessToken, browserAccount])
+  }, [accessToken, browserAccount, chainId, signMessageAsync, switchChainAsync])
 
   // ---- Mint: POST /coptt/mint -----------------------------------------
   const mint = useCallback(async () => {
@@ -436,7 +463,7 @@ export function BuyCopttCard() {
     ? serverWallet?.address
     : kycDone
       ? hasProvider
-        ? "Connect MetaMask on Sepolia and sign to bind."
+        ? "Connect a wallet on Sepolia and sign to bind."
         : "Install MetaMask to continue."
       : "Unlocked after identity verification."
 
@@ -530,18 +557,14 @@ export function BuyCopttCard() {
                 Connect your wallet, then sign a message to bind it to your account.
                 No transaction fee.
               </p>
-              <Button
-                className="mt-3 bg-stone-900 text-white hover:bg-stone-800"
-                onClick={connect}
-                disabled={connecting}
-              >
-                {connecting ? (
-                  <Loader2Icon className="animate-spin" />
-                ) : (
-                  <WalletIcon />
-                )}
-                Connect MetaMask
-              </Button>
+              <div className="mt-3">
+                <WalletConnectButton
+                  label="Connect wallet"
+                  tone="stone"
+                  onLegacyConnect={connect}
+                  legacyConnecting={connecting}
+                />
+              </div>
             </>
           ) : (
             <>

@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
 import { BuyCopttCard } from "@/components/buy-coptt-card"
-import { InvestCheckout } from "@/components/invest-checkout"
+import { BuyFlow } from "@/components/buy-flow"
 
 const TERMS: { label: string; value: string; highlight?: boolean }[] = [
   { label: "Equity", value: "CHF 5,600,000", highlight: true },
@@ -319,7 +319,7 @@ export function OfferCoptt() {
 
       <BuyCopttCard />
 
-      <InvestCheckout />
+      <BuyFlow />
     </div>
   )
 }

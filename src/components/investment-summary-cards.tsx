@@ -59,10 +59,10 @@ const totalReturnsChartData = [
 const investmentsChartData = [
   { month: "Jan", active: 1, pending: 0 },
   { month: "Feb", active: 2, pending: 0 },
-  { month: "Mar", active: 2, pending: 1 },
-  { month: "Apr", active: 2, pending: 2 },
-  { month: "May", active: 2, pending: 2 },
-  { month: "Jun", active: 2, pending: 2 },
+  { month: "Mar", active: 3, pending: 0 },
+  { month: "Apr", active: 4, pending: 0 },
+  { month: "May", active: 4, pending: 0 },
+  { month: "Jun", active: 4, pending: 0 },
 ]
 
 const totalReturnsChartConfig = {
@@ -242,8 +242,8 @@ export function InvestmentSummaryCards() {
         </CardContent>
         <CardFooter className="pt-0 text-sm">
           <p className="flex gap-2 text-muted-foreground">
-            <span className="text-emerald-600">2 Active</span>
-            <span>2 Pending</span>
+            <span className="text-emerald-600">4 Active</span>
+            <span>0 Pending</span>
             <span>0 Done</span>
           </p>
         </CardFooter>
