@@ -75,15 +75,9 @@ interface EthereumProvider {
   removeListener?: (event: string, handler: (...args: unknown[]) => void) => void
 }
 
-declare global {
-  interface Window {
-    ethereum?: EthereumProvider
-  }
-}
-
 function getInjectedProviders(): EthereumProvider[] {
   if (typeof window === "undefined") return []
-  const eth = window.ethereum
+  const eth = (window as Window & { ethereum?: EthereumProvider }).ethereum
   if (!eth) return []
   if (Array.isArray(eth.providers) && eth.providers.length > 0) {
     return eth.providers
