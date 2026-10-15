@@ -1,6 +1,7 @@
 "use client"
 
 import type { TxRequest } from "@/lib/api"
+import { USE_RAINBOWKIT } from "@/lib/wallet-mode"
 
 /**
  * Wallet plumbing.
@@ -47,7 +48,9 @@ export class WalletError extends Error {
 export const USER_REJECTED = 4001
 
 export function isUserRejection(err: unknown): boolean {
-  return err instanceof WalletError && err.code === USER_REJECTED
+  if (err instanceof WalletError && err.code === USER_REJECTED) return true
+  const e = err as { code?: number; name?: string }
+  return e?.code === USER_REJECTED || e?.name === "UserRejectedRequestError"
 }
 
 function toWalletError(err: unknown): WalletError {
@@ -56,6 +59,9 @@ function toWalletError(err: unknown): WalletError {
 }
 
 export async function connect(): Promise<string> {
+  if (USE_RAINBOWKIT) {
+    throw new WalletError("Connect a wallet from the RainbowKit modal.")
+  }
   const provider = getProvider()
   if (!provider) throw new WalletError("No wallet detected. Install MetaMask to continue.")
   try {
@@ -69,6 +75,7 @@ export async function connect(): Promise<string> {
 }
 
 export async function currentAccount(): Promise<string | null> {
+  if (USE_RAINBOWKIT) return null
   const provider = getProvider()
   if (!provider) return null
   try {

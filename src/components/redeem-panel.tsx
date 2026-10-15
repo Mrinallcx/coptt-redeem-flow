@@ -21,15 +21,15 @@ import {
   type Redemption,
   type RedemptionConfig,
 } from "@/lib/api"
+import { WalletConnectButton } from "@/components/wallet-connect-button"
+import { usePortalWallet } from "@/hooks/use-portal-wallet"
 import {
   connect,
   currentAccount,
-  ensureChain,
   explorerTx,
   isUserRejection,
-  sendTx,
-  waitForReceipt,
 } from "@/lib/wallet"
+import { USE_RAINBOWKIT } from "@/lib/wallet-mode"
 import { cn } from "@/lib/utils"
 
 /**
@@ -44,6 +44,8 @@ export function RedeemPanel() {
   const [config, setConfig] = useState<RedemptionConfig | null>(null)
   const [rows, setRows] = useState<Redemption[]>([])
   const [wallet, setWallet] = useState<string | null>(null)
+  const { rainbowAddress, ensureChain, sendTx, waitForReceipt } = usePortalWallet()
+  const connectedWallet = USE_RAINBOWKIT ? rainbowAddress : wallet
 
   const [amountLb, setAmountLb] = useState("")
   const [busy, setBusy] = useState(false)
@@ -66,7 +68,7 @@ export function RedeemPanel() {
 
   useEffect(() => {
     load()
-    currentAccount().then(setWallet)
+    if (!USE_RAINBOWKIT) currentAccount().then(setWallet)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -79,7 +81,11 @@ export function RedeemPanel() {
     setError(null)
 
     try {
-      const from = wallet ?? (await connect())
+      const from = connectedWallet ?? (USE_RAINBOWKIT ? null : await connect())
+      if (!from) {
+        setError("Connect a wallet first.")
+        return
+      }
       setWallet(from)
       await ensureChain(config.chain_id)
 
@@ -120,7 +126,11 @@ export function RedeemPanel() {
     setBusy(true)
     setError(null)
     try {
-      const from = wallet ?? (await connect())
+      const from = connectedWallet ?? (USE_RAINBOWKIT ? null : await connect())
+      if (!from) {
+        setError("Connect a wallet first.")
+        return
+      }
       await ensureChain(config.chain_id)
       const { cancel_tx } = await copttApi.prepareCancelRedemption(r.redemption_id)
       const hash = await sendTx(from, cancel_tx)
@@ -199,14 +209,26 @@ export function RedeemPanel() {
             the metal has actually changed hands.
           </p>
 
-          <Button
-            className="w-full bg-[#B87333] text-white hover:bg-[#9A5B2E]"
-            disabled={!valid || busy || config.paused}
-            onClick={submit}
-          >
-            {busy ? <Loader2Icon className="animate-spin" /> : <PackageIcon />}
-            {busy ? statusLine || "Working…" : "Request redemption"}
-          </Button>
+          {!connectedWallet ? (
+            <WalletConnectButton
+              onLegacyConnect={() => {
+                void connect().then(setWallet).catch((err) => {
+                  if (!isUserRejection(err)) {
+                    setError(err instanceof Error ? err.message : "Could not connect")
+                  }
+                })
+              }}
+            />
+          ) : (
+            <Button
+              className="w-full bg-[#B87333] text-white hover:bg-[#9A5B2E]"
+              disabled={!valid || busy || config.paused}
+              onClick={submit}
+            >
+              {busy ? <Loader2Icon className="animate-spin" /> : <PackageIcon />}
+              {busy ? statusLine || "Working…" : "Request redemption"}
+            </Button>
+          )}
         </CardContent>
       </Card>
 

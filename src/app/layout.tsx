@@ -3,6 +3,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import { DisclaimerGate } from "@/components/disclaimer-gate";
 import { AuthProvider } from "@/contexts/auth-context";
+import { WalletProviders } from "@/components/wallet-providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -24,9 +25,11 @@ export default function RootLayout({
     <html lang="en" className="h-full antialiased">
       <body className="min-h-full flex flex-col">
         <AuthProvider>
-          <TooltipProvider>{children}</TooltipProvider>
-          <DisclaimerGate />
-          <Toaster />
+          <WalletProviders>
+            <TooltipProvider>{children}</TooltipProvider>
+            <DisclaimerGate />
+            <Toaster />
+          </WalletProviders>
         </AuthProvider>
       </body>
     </html>

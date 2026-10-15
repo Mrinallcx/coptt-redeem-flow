@@ -8,7 +8,6 @@ import {
   CheckIcon,
   ExternalLinkIcon,
   Loader2Icon,
-  WalletIcon,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -23,17 +22,17 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
+import { WalletConnectButton } from "@/components/wallet-connect-button"
+import { usePortalWallet } from "@/hooks/use-portal-wallet"
 import { ApiRequestError, copttApi, type PurchaseConfig, type PurchaseQuote } from "@/lib/api"
 import {
   connect,
   currentAccount,
-  ensureChain,
   explorerTx,
   isUserRejection,
-  sendTx,
   shortAddress,
-  waitForReceipt,
 } from "@/lib/wallet"
+import { USE_RAINBOWKIT } from "@/lib/wallet-mode"
 import { cn } from "@/lib/utils"
 
 /**
@@ -58,6 +57,8 @@ export function BuyFlow({ className }: { className?: string }) {
   const [config, setConfig] = useState<PurchaseConfig | null>(null)
   const [quote, setQuote] = useState<PurchaseQuote | null>(null)
   const [wallet, setWallet] = useState<string | null>(null)
+  const { rainbowAddress, ensureChain, sendTx, waitForReceipt } = usePortalWallet()
+  const connectedWallet = USE_RAINBOWKIT ? rainbowAddress : wallet
 
   const [amountLb, setAmountLb] = useState("100")
   const [busy, setBusy] = useState(false)
@@ -68,7 +69,7 @@ export function BuyFlow({ className }: { className?: string }) {
 
   useEffect(() => {
     copttApi.getPurchaseConfig().then(setConfig).catch(() => setConfig(null))
-    currentAccount().then(setWallet)
+    if (!USE_RAINBOWKIT) currentAccount().then(setWallet)
   }, [])
 
   // A visible countdown, because a quote that silently lapses and then
@@ -121,6 +122,7 @@ export function BuyFlow({ className }: { className?: string }) {
   }
 
   const connectWallet = async () => {
+    if (USE_RAINBOWKIT) return
     try {
       setWallet(await connect())
     } catch (err) {
@@ -131,7 +133,7 @@ export function BuyFlow({ className }: { className?: string }) {
   }
 
   const buy = async () => {
-    if (!quote || !wallet) return
+    if (!quote || !connectedWallet) return
     setBusy(true)
     setError(null)
     setStep("working")
@@ -143,7 +145,7 @@ export function BuyFlow({ className }: { className?: string }) {
       // the buyer already granted reads as a second charge.
       if (quote.approve_tx) {
         setStatusLine(`Approve ${quote.pricing.payment_symbol} spending…`)
-        const approveHash = await sendTx(wallet, quote.approve_tx)
+        const approveHash = await sendTx(connectedWallet, quote.approve_tx)
         setStatusLine("Waiting for the approval to confirm…")
         const approved = await waitForReceipt(approveHash)
         if (approved.status !== "success") {
@@ -152,7 +154,7 @@ export function BuyFlow({ className }: { className?: string }) {
       }
 
       setStatusLine("Confirm the purchase…")
-      const hash = await sendTx(wallet, quote.buy_tx)
+      const hash = await sendTx(connectedWallet, quote.buy_tx)
       setTxHash(hash)
 
       setStatusLine("Waiting for the purchase to confirm…")
@@ -359,13 +361,10 @@ export function BuyFlow({ className }: { className?: string }) {
                 <Button variant="outline" onClick={reset} disabled={busy}>
                   Back
                 </Button>
-                {!wallet ? (
-                  <Button
-                    className="bg-[#B87333] text-white hover:bg-[#9A5B2E]"
-                    onClick={connectWallet}
-                  >
-                    <WalletIcon /> Connect wallet
-                  </Button>
+                {!connectedWallet ? (
+                  <WalletConnectButton
+                    onLegacyConnect={connectWallet}
+                  />
                 ) : expired ? (
                   <Button className="bg-[#B87333] text-white hover:bg-[#9A5B2E]" onClick={getQuote}>
                     New price
@@ -396,9 +395,9 @@ export function BuyFlow({ className }: { className?: string }) {
             ) : null}
           </SheetFooter>
 
-          {wallet && step !== "done" ? (
+          {connectedWallet && step !== "done" ? (
             <p className="border-t px-4 py-2 text-xs text-muted-foreground">
-              Paying from <span className="font-mono">{shortAddress(wallet)}</span>
+              Paying from <span className="font-mono">{shortAddress(connectedWallet)}</span>
             </p>
           ) : null}
         </SheetContent>

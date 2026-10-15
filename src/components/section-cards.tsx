@@ -7,7 +7,6 @@ import { ArrowRightIcon, LockIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { CopperPriceCard } from "@/components/copper-price"
 import { CopperPriceChart } from "@/components/copper-price-chart"
-import { SensitiveText, shouldBlurField } from "@/components/sensitive-text"
 import { cn } from "@/lib/utils"
 
 type OfferAccent = "copper" | "tin" | "solar" | "estate"
@@ -95,7 +94,7 @@ function ExpandableDescription({
           !expanded && "line-clamp-2",
         )}
       >
-        <SensitiveText text={text} />
+        {text}
       </p>
       {showToggle ? (
         <button
@@ -135,8 +134,6 @@ function OfferCardItem({
   const isLive = !!href && !comingSoon
   const styles = isLive ? liveCopperCard : inactiveCard
   const hasSpecs = !!specs?.length
-  const blurUpcoming = !isLive && (!!comingSoon || !!futureProduction)
-
   return (
     <article
       className={cn(
@@ -185,9 +182,7 @@ function OfferCardItem({
             >
               {ticker}
             </h3>
-            <p className={cn("text-xs", styles.subtitle)}>
-              <SensitiveText text={subtitle} blurAll={blurUpcoming} />
-            </p>
+            <p className={cn("text-xs", styles.subtitle)}>{subtitle}</p>
           </div>
 
           {futureProduction ? (
@@ -224,12 +219,7 @@ function OfferCardItem({
                 >
                   {spec.label}
                 </dt>
-                <dd className={cn("text-xs leading-snug", styles.stat)}>
-                  <SensitiveText
-                    text={spec.value}
-                    blurAll={blurUpcoming && shouldBlurField(spec.label)}
-                  />
-                </dd>
+                <dd className={cn("text-xs leading-snug", styles.stat)}>{spec.value}</dd>
               </div>
             ))}
           </dl>
@@ -384,9 +374,8 @@ export function SectionCards() {
       category: "Commodities",
       description:
         "Tokenized exposure to the Kamoa-Kakula high-grade underground copper mine in the DRC.",
+      href: "/offers/coptt",
       accent: "copper",
-      comingSoon: true,
-      futureProduction: true,
       coverImage: "/copper-pit.png",
       specs: [
         {
@@ -417,9 +406,8 @@ export function SectionCards() {
       category: "Commodities",
       description:
         "Tokenized exposure to the Los Azules open-pit copper deposit in San Juan Province, Argentina.",
+      href: "/offers/coptt",
       accent: "copper",
-      comingSoon: true,
-      futureProduction: true,
       coverImage: "/copper-pit-dusk.png",
       specs: [
         {

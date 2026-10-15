@@ -13,15 +13,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { WalletConnectButton } from "@/components/wallet-connect-button"
+import { usePortalWallet } from "@/hooks/use-portal-wallet"
 import { ApiRequestError, copttApi, type CopttrHolding } from "@/lib/api"
-import {
-  connect,
-  currentAccount,
-  ensureChain,
-  isUserRejection,
-  sendTx,
-  waitForReceipt,
-} from "@/lib/wallet"
+import { connect, currentAccount, isUserRejection } from "@/lib/wallet"
+import { USE_RAINBOWKIT } from "@/lib/wallet-mode"
 import { cn } from "@/lib/utils"
 
 /**
@@ -38,6 +34,8 @@ export function CopttrPanel() {
   const [chainId, setChainId] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
   const [wallet, setWallet] = useState<string | null>(null)
+  const { rainbowAddress, ensureChain, sendTx, waitForReceipt } = usePortalWallet()
+  const connectedWallet = USE_RAINBOWKIT ? rainbowAddress : wallet
   const [busyId, setBusyId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -56,7 +54,7 @@ export function CopttrPanel() {
 
   useEffect(() => {
     load()
-    currentAccount().then(setWallet)
+    if (!USE_RAINBOWKIT) currentAccount().then(setWallet)
   }, [load])
 
   const convert = async (h: CopttrHolding) => {
@@ -64,7 +62,11 @@ export function CopttrPanel() {
     setBusyId(h.series_id)
     setError(null)
     try {
-      const from = wallet ?? (await connect())
+      const from = connectedWallet ?? (USE_RAINBOWKIT ? null : await connect())
+      if (!from) {
+        setError("Connect a wallet first.")
+        return
+      }
       setWallet(from)
       await ensureChain(chainId)
 
@@ -173,6 +175,19 @@ export function CopttrPanel() {
                   : `Opens ${new Date(h.earliest_conversion).toLocaleDateString()}`}
               </p>
 
+              {!connectedWallet ? (
+                <div className="mt-3">
+                  <WalletConnectButton
+                    onLegacyConnect={() => {
+                      void connect().then(setWallet).catch((err) => {
+                        if (!isUserRejection(err)) {
+                          setError(err instanceof Error ? err.message : "Could not connect")
+                        }
+                      })
+                    }}
+                  />
+                </div>
+              ) : (
               <Button
                 size="sm"
                 className="mt-3 w-full bg-[#B87333] text-white hover:bg-[#9A5B2E]"
@@ -186,6 +201,7 @@ export function CopttrPanel() {
                 )}
                 {canConvert ? `Convert ${h.claimable_lb} lb to COPTT` : "Nothing to convert yet"}
               </Button>
+              )}
             </div>
           )
         })}
