@@ -79,8 +79,9 @@ function getInjectedProviders(): EthereumProvider[] {
   if (typeof window === "undefined") return []
   const eth = (window as Window & { ethereum?: EthereumProvider }).ethereum
   if (!eth) return []
-  if (Array.isArray(eth.providers) && eth.providers.length > 0) {
-    return eth.providers
+  const providers = eth.providers as EthereumProvider[] | undefined
+  if (Array.isArray(providers) && providers.length > 0) {
+    return providers
   }
   return [eth]
 }
