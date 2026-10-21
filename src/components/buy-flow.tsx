@@ -316,7 +316,6 @@ export function BuyFlow({ className }: { className?: string }) {
 
             {step === "method" ? (
               <div className="space-y-3">
-                <p className="text-xs text-muted-foreground">{CHECKOUT_SHEET_DESCRIPTION}</p>
                 <PayOption
                   selected={method === "wallet"}
                   onSelect={() => setMethod("wallet")}

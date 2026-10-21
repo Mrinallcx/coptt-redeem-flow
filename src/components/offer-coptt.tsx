@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils"
 import { BuyCopttCard } from "@/components/buy-coptt-card"
 import { BuyFlow } from "@/components/buy-flow"
 import { NEW_ORLEANS_VAULT_SPECS } from "@/content/investor-portal-dashboard"
+import { PAYMENT_MIN_CHECKOUT } from "@/lib/payment-display"
 
 const VAULT_HIGHLIGHT_LABELS = new Set(["UNDERLYING", "LOCATION", "MIN. TICKET"])
 
@@ -22,7 +23,7 @@ const HIGHLIGHTS = [
   "ERC-20 on Ethereum with transparent supply and on-chain settlement",
   "Optional physical redemption for institutional holders",
   "KYC-gated wallets only, fully regulatory-compliant",
-  "Minimum 1 lb · Paid in USDC; USD1 also accepted (wallet or bank transfer)",
+  PAYMENT_MIN_CHECKOUT,
 ]
 
 const OFFER_RISKS = [
