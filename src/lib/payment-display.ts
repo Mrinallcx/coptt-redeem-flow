@@ -6,9 +6,6 @@ export const CHECKOUT_SHEET_DESCRIPTION = PAYMENT_MIN_CHECKOUT
 /** Wallet and bank settlement currencies. */
 export const PAYMENT_CURRENCIES = "USDC, USD1"
 
-/** Buy card / offer summary line. */
-export const PAYMENT_SETTLEMENT_LINE = `Settled in USDC · USD1 also accepted`
-
 export function formatPaymentAmount(totalUsd: number): string {
   return `${totalUsd.toLocaleString(undefined, {
     minimumFractionDigits: 2,

@@ -41,7 +41,7 @@ import { demoPurchaseConfig, demoPurchaseQuote } from "@/lib/demo-data"
 import {
   CHECKOUT_SHEET_DESCRIPTION,
   PAYMENT_CURRENCIES,
-  PAYMENT_SETTLEMENT_LINE,
+  PAYMENT_MIN_CHECKOUT,
   formatPaymentAmount,
 } from "@/lib/payment-display"
 
@@ -241,10 +241,7 @@ export function BuyFlow({ className }: { className?: string }) {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-sm font-semibold">Buy CuTT</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              1 CuTT = 1 lb of COMEX Grade 1 copper
-              {config ? ` · ${PAYMENT_SETTLEMENT_LINE}` : ""}
-            </p>
+            <p className="mt-1 text-xs text-muted-foreground">{PAYMENT_MIN_CHECKOUT}</p>
           </div>
           <Button
             size="lg"
