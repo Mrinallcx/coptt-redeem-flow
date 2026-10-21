@@ -23,7 +23,7 @@ export default function Page() {
               <div className="text-center">
                 <h1 className="text-base font-semibold">Earn</h1>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Stake COPTT to receive stCOPTT. 1 COPTT = 1 metric ton of copper.
+                  Stake CuTTy to receive stCuTTy. Yield tied to platform fees and COMEX copper exposure.
                 </p>
               </div>
               <YieldStakeForm />

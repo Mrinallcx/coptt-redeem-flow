@@ -103,7 +103,7 @@ export function demoPrice(): CopperPrice {
     publish_time: now,
     source: "mock",
     fetched_at: now,
-    feed_symbol: "Commodities.Index.CU/USD",
+    feed_symbol: "CME COMEX copper (HG)",
   }
 }
 

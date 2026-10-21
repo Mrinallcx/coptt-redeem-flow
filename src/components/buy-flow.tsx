@@ -83,7 +83,7 @@ export function BuyFlow({ className }: { className?: string }) {
 
   useEffect(() => {
     if (step === "confirm" && method === "bank" && !bankReference) {
-      setBankReference(`COPTT-${Date.now().toString(36).toUpperCase()}`)
+      setBankReference(`CuTT-${Date.now().toString(36).toUpperCase()}`)
     }
   }, [step, method, bankReference])
 
@@ -147,7 +147,7 @@ export function BuyFlow({ className }: { className?: string }) {
       setStatusLine("Confirming wallet payment…")
       await new Promise((resolve) => setTimeout(resolve, 700))
       setStep("done")
-      toast.success(`Wallet checkout complete · ${quote.pricing.amount_lb} lb COPTT`)
+      toast.success(`Wallet checkout complete · ${quote.pricing.amount_lb} lb CuTT`)
       setBusy(false)
       return
     }
@@ -182,7 +182,7 @@ export function BuyFlow({ className }: { className?: string }) {
       }
 
       setStep("done")
-      toast.success(`Bought ${quote.pricing.amount_lb} lb of COPTT`)
+      toast.success(`Bought ${quote.pricing.amount_lb} lb of CuTT`)
     } catch (err) {
       if (isUserRejection(err)) {
         setStep("confirm")
@@ -216,13 +216,13 @@ export function BuyFlow({ className }: { className?: string }) {
     if (step === "done") {
       return method === "wallet" ? "Purchase complete" : "Transfer recorded"
     }
-    if (step === "amount") return "Buy COPTT"
+    if (step === "amount") return "Buy CuTT"
     if (step === "price") return "Your price"
     if (step === "method") return "Payment method"
     if (step === "confirm") {
       return method === "wallet" ? "Pay with wallet" : "Bank transfer"
     }
-    return "Buy COPTT"
+    return "Buy CuTT"
   }, [step, method])
 
   const totalLabel = quote
@@ -237,9 +237,9 @@ export function BuyFlow({ className }: { className?: string }) {
       <div className={cn("overflow-hidden rounded-xl border border-border/80 bg-card p-5 shadow-sm", className)}>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm font-semibold">Buy COPTT</p>
+            <p className="text-sm font-semibold">Buy CuTT</p>
             <p className="mt-1 text-xs text-muted-foreground">
-              1 COPTT = 1 lb of LME Grade A copper
+              1 CuTT = 1 lb of COMEX Grade 1 copper
               {config ? ` · settled in ${config.payment_symbol}` : ""}
             </p>
           </div>
@@ -387,7 +387,7 @@ export function BuyFlow({ className }: { className?: string }) {
                 </span>
                 <p className="text-sm font-semibold">
                   {method === "wallet"
-                    ? `${quote.pricing.amount_lb} lb COPTT is in your wallet`
+                    ? `${quote.pricing.amount_lb} lb CuTT is in your wallet`
                     : "Bank transfer instructions saved"}
                 </p>
                 <p className="text-sm text-muted-foreground">
@@ -518,7 +518,7 @@ function OrderSummary({
     <div className="rounded-lg border bg-muted/30 px-3 py-3 text-sm">
       <p className="font-semibold tabular-nums">{totalLabel}</p>
       <p className="mt-1 text-xs text-muted-foreground">
-        {quote.pricing.amount_lb} lb COPTT · $
+        {quote.pricing.amount_lb} lb CuTT · $
         {quote.pricing.effective_usd_per_lb.toFixed(4)} / lb
       </p>
     </div>

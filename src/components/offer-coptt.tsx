@@ -12,36 +12,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
 import { BuyCopttCard } from "@/components/buy-coptt-card"
 import { BuyFlow } from "@/components/buy-flow"
+import { NEW_ORLEANS_VAULT_SPECS } from "@/content/investor-portal-dashboard"
 
-const TERMS: { label: string; value: string; highlight?: boolean }[] = [
-  { label: "Equity", value: "CHF 5,600,000", highlight: true },
-  { label: "Type of Investment", value: "Equity" },
-  { label: "Min. Investment Amount", value: "N/A" },
-  { label: "Max. Investment Amount", value: "N/A" },
-  { label: "Issue Date", value: "15 October 2025", highlight: true },
-  { label: "Term", value: "12 months", highlight: true },
-]
+const VAULT_HIGHLIGHT_LABELS = new Set(["UNDERLYING", "LOCATION", "MIN. TICKET"])
 
 const HIGHLIGHTS = [
-  "1 COPTT = 1 Mt of LME Grade A copper, in-ground reserves",
-  "Backed by geological certification and a third-party reserve audit",
-  "ERC-20 on Ethereum — transparent supply, on-chain audit trail",
+  "1 CuTT = 1 lb of COMEX Grade 1 copper cathode in bonded warehouse",
+  "Physical copper held in an FDA-approved warehouse with warrant inventory",
+  "ERC-20 on Ethereum with transparent supply and on-chain settlement",
   "Optional physical redemption for institutional holders",
-  "KYC-gated wallets only — fully regulatory-compliant",
+  "KYC-gated wallets only, fully regulatory-compliant",
 ]
-
-const FUNDING = {
-  target: 5_600_000,
-  raised: 4_312_000,
-  investors: 134,
-  daysLeft: 15,
-  currency: "CHF",
-}
 
 const OFFER_RISKS = [
   {
     title: "Capital at risk",
-    body: "COPTT is linked to the copper price, which can fall as well as rise. You may get back less than you invest, and you should be prepared to lose the entire amount.",
+    body: "CuTT is linked to the copper price, which can fall as well as rise. You may get back less than you invest, and you should be prepared to lose the entire amount.",
   },
   {
     title: "No advice or offer",
@@ -66,19 +52,11 @@ const OFFER_RISKS = [
 ]
 
 const DOCUMENTS = [
-  { title: "COPTT Offering Memorandum", filename: "COPTT-Offering-Memorandum.txt" },
-  { title: "Risk Factors", filename: "COPTT-Risk-Factors.txt" },
-  { title: "Subscription Agreement", filename: "COPTT-Subscription-Agreement.txt" },
-  { title: "Reserve Audit Summary", filename: "COPTT-Reserve-Audit-Summary.txt" },
+  { title: "CuTT Offering Memorandum", filename: "CuTT-Offering-Memorandum.txt" },
+  { title: "Risk Factors", filename: "CuTT-Risk-Factors.txt" },
+  { title: "Subscription Agreement", filename: "CuTT-Subscription-Agreement.txt" },
+  { title: "Reserve Audit Summary", filename: "CuTT-Reserve-Audit-Summary.txt" },
 ]
-
-function formatMoney(amount: number, currency: string) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency,
-    maximumFractionDigits: 0,
-  }).format(amount)
-}
 
 function downloadDocument(title: string, filename: string) {
   const blob = new Blob(
@@ -93,43 +71,25 @@ function downloadDocument(title: string, filename: string) {
   URL.revokeObjectURL(url)
 }
 
-function FundingProgress() {
-  const percent = Math.round((FUNDING.raised / FUNDING.target) * 1000) / 10
-
+function VaultDetails() {
   return (
-    <div className="space-y-4">
-      <div className="flex items-baseline justify-between gap-4">
-        <p className="text-sm text-muted-foreground">
-          <span className="font-semibold tabular-nums text-foreground">
-            {formatMoney(FUNDING.raised, FUNDING.currency)}
-          </span>{" "}
-          raised
-        </p>
-        <p className="text-sm font-semibold tabular-nums">{percent.toFixed(0)}%</p>
-      </div>
-
-      <div
-        className="h-2 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800"
-        role="progressbar"
-        aria-valuenow={percent}
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-label="Funding progress"
-      >
+    <dl className="divide-y rounded-lg border">
+      {NEW_ORLEANS_VAULT_SPECS.map((spec) => (
         <div
-          className="h-full rounded-full bg-[#D4A017]"
-          style={{ width: `${Math.min(100, percent)}%` }}
-        />
-      </div>
-
-      <p className="text-xs text-muted-foreground">
-        Target {formatMoney(FUNDING.target, FUNDING.currency)}
-        <span className="mx-2 text-border">·</span>
-        {FUNDING.investors} investors
-        <span className="mx-2 text-border">·</span>
-        {FUNDING.daysLeft} days left
-      </p>
-    </div>
+          key={spec.label}
+          className={cn(
+            "grid gap-1 px-4 py-3 sm:grid-cols-[8rem_1fr]",
+            VAULT_HIGHLIGHT_LABELS.has(spec.label) &&
+              "bg-amber-50/50 dark:bg-amber-950/20",
+          )}
+        >
+          <dt className="text-[11px] font-medium tracking-wide text-muted-foreground">
+            {spec.label}
+          </dt>
+          <dd className="text-sm leading-snug text-foreground">{spec.value}</dd>
+        </div>
+      ))}
+    </dl>
   )
 }
 
@@ -162,7 +122,7 @@ function OfferDocuments() {
       <div>
         <h3 className="text-sm font-semibold text-foreground">Documents</h3>
         <p className="mt-1 text-sm text-muted-foreground">
-          Download the offering materials for this raise.
+          Download the offering materials for this vault.
         </p>
       </div>
       <ul className="divide-y rounded-lg border">
@@ -227,7 +187,7 @@ export function OfferCoptt() {
               <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#9A5B2E]">
                 Commodities
               </span>
-              <Badge variant="outline">Equity</Badge>
+              <Badge variant="outline">Vault</Badge>
             </div>
             <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700">
               <span className="size-1.5 rounded-full bg-emerald-500" />
@@ -236,24 +196,24 @@ export function OfferCoptt() {
           </div>
 
           <h1 className="mt-4 font-heading text-3xl font-semibold tracking-tight">
-            COPTT
+            CuTT
           </h1>
-          <p className="mt-1 text-muted-foreground">Tokenized Copper</p>
+          <p className="mt-1 text-muted-foreground">New Orleans Vault</p>
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            A tokenized forward sale of in-ground copper reserves, giving institutional
-            investors discounted, transparent, on-chain exposure to future copper production.
+            COMEX Grade 1 copper cathode in an FDA-approved New Orleans warehouse.
+            1 CuTT represents 1 lb of deliverable copper with on-chain settlement.
           </p>
         </div>
       </header>
 
-      <Tabs defaultValue="funding" className={cn("gap-3 px-6 pb-6 pt-3", panel)}>
+      <Tabs defaultValue="vault" className={cn("gap-3 p-6", panel)}>
         <TabsList>
-          <TabsTrigger value="funding">Funding progress</TabsTrigger>
+          <TabsTrigger value="vault">Vault details</TabsTrigger>
           <TabsTrigger value="risk">Risk disclosure</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
         </TabsList>
-        <TabsContent value="funding">
-          <FundingProgress />
+        <TabsContent value="vault">
+          <VaultDetails />
         </TabsContent>
         <TabsContent value="risk">
           <RiskDisclosure />
@@ -262,41 +222,6 @@ export function OfferCoptt() {
           <OfferDocuments />
         </TabsContent>
       </Tabs>
-
-      <Section title="Offer terms">
-        <dl className={cn("grid grid-cols-2 gap-px overflow-hidden sm:grid-cols-3", panel)}>
-          {TERMS.map((term) => (
-            <div
-              key={term.label}
-              className={cn(
-                "px-4 py-4",
-                term.highlight
-                  ? "bg-gradient-to-br from-amber-50/95 via-orange-50/40 to-amber-50/20 ring-1 ring-inset ring-amber-200/70 dark:from-amber-950/45 dark:via-orange-950/20 dark:to-amber-950/10 dark:ring-amber-800/40"
-                  : "bg-card",
-              )}
-            >
-              <dt
-                className={cn(
-                  "text-[11px] font-medium uppercase tracking-wide",
-                  term.highlight
-                    ? "text-[#9A5B2E]/80 dark:text-amber-400/80"
-                    : "text-muted-foreground",
-                )}
-              >
-                {term.label}
-              </dt>
-              <dd
-                className={cn(
-                  "mt-1.5 text-sm font-semibold tabular-nums",
-                  term.highlight && "text-[#8B4513] dark:text-amber-300",
-                )}
-              >
-                {term.value}
-              </dd>
-            </div>
-          ))}
-        </dl>
-      </Section>
 
       <Section title="Highlights">
         <ul className={cn("divide-y px-1", panel)}>

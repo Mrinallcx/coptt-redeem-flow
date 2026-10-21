@@ -17,7 +17,7 @@ export const DISCLAIMER_VERSION = "v1"
 const STORAGE_KEY = `coptt_disclaimer_accepted_${DISCLAIMER_VERSION}`
 
 const RISKS = [
-  "COPTT is a tokenized commodity product. Its value is linked to the price of copper, which can fall as well as rise — you may get back less than you invest, and you should be prepared to lose the entire amount.",
+  "CuTT is a tokenized commodity product. Its value is linked to the price of copper, which can fall as well as rise — you may get back less than you invest, and you should be prepared to lose the entire amount.",
   "Nothing in this portal is investment, legal, or tax advice, and nothing here is an offer or solicitation in any jurisdiction where such an offer would be unlawful.",
   "Access requires identity verification (KYC) and anti-money-laundering checks. Eligibility to invest may be restricted depending on your country of residence and investor classification.",
   "Digital assets carry risks beyond the underlying commodity, including price volatility, loss or theft of wallet keys, smart-contract defects, network failure, and limited or no secondary market liquidity.",

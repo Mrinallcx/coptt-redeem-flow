@@ -76,7 +76,7 @@ export function CopttrPanel() {
         throw new Error("The conversion reverted — nothing was burned.")
       }
 
-      toast.success(`Converted ${h.claimable_lb} lb into COPTT`)
+      toast.success(`Converted ${h.claimable_lb} lb into CuTT`)
       setTimeout(load, 20_000)
     } catch (err) {
       if (!isUserRejection(err)) setError(explainConvertError(err))
@@ -90,7 +90,7 @@ export function CopttrPanel() {
       <Card>
         <CardHeader>
           <CardTitle className="text-sm font-medium text-muted-foreground">
-            Forward positions (COPTTR)
+            Forward positions (CuTTr)
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -105,11 +105,11 @@ export function CopttrPanel() {
       <Card>
         <CardHeader>
           <CardTitle className="text-sm font-medium text-muted-foreground">
-            Forward positions (COPTTR)
+            Forward positions (CuTTr)
           </CardTitle>
           <CardDescription className="text-xs">
-            You hold no series. COPTTR is a claim on copper a mine expects to
-            produce; it converts into COPTT as that copper is delivered.
+            You hold no series. CuTTr is a claim on copper a mine expects to
+            produce; it converts into CuTT as that copper is delivered.
           </CardDescription>
         </CardHeader>
       </Card>
@@ -120,10 +120,10 @@ export function CopttrPanel() {
     <Card>
       <CardHeader>
         <CardTitle className="text-sm font-medium text-muted-foreground">
-          Forward positions (COPTTR)
+          Forward positions (CuTTr)
         </CardTitle>
         <CardDescription className="text-xs">
-          Converts into COPTT pro rata as copper is delivered
+          Converts into CuTT pro rata as copper is delivered
         </CardDescription>
       </CardHeader>
 
@@ -143,7 +143,7 @@ export function CopttrPanel() {
             <div key={h.series_id} className="rounded-lg border px-3 py-3">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">{h.symbol || "COPTTR"}</p>
+                  <p className="truncate text-sm font-medium">{h.symbol || "CuTTr"}</p>
                   <p className="truncate text-xs text-muted-foreground">{h.name}</p>
                 </div>
                 <Badge variant="outline" className={cn(h.status === "converting" && "text-emerald-600")}>
@@ -199,7 +199,7 @@ export function CopttrPanel() {
                 ) : (
                   <ArrowRightLeftIcon />
                 )}
-                {canConvert ? `Convert ${h.claimable_lb} lb to COPTT` : "Nothing to convert yet"}
+                {canConvert ? `Convert ${h.claimable_lb} lb to CuTT` : "Nothing to convert yet"}
               </Button>
               )}
             </div>
@@ -218,7 +218,7 @@ function explainConvertError(err: unknown): string {
       case "exceeds_entitlement":
         return err.message ?? "More than you can convert today."
       case "copttr_unavailable":
-        return "COPTTR is not available on this environment."
+        return "CuTTr is not available on this environment."
     }
     return err.message ?? "Could not convert."
   }

@@ -49,7 +49,7 @@ export const SUPPORT_EMAIL = "support@totofinance.co"
 // Support has no way to look a user up from a bare email, so the account
 // address goes in the body when we know who is asking.
 function supportMailto(userEmail?: string): string {
-  const subject = "COPTT portal — support request"
+  const subject = "CuTT portal support request"
   const body = userEmail
     ? `\n\n---\nAccount: ${userEmail}`
     : ""
@@ -126,7 +126,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 Earn
               </span>
               <span className="text-pretty text-xs text-muted-foreground">
-                Stake COPTT for stCOPTT
+                Stake CuTTy for stCuTTy
               </span>
             </span>
           </Link>

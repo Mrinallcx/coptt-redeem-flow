@@ -165,7 +165,7 @@ export function CopperPriceChart({
               )}
             </div>
             <CardDescription className="text-xs">
-              USD per pound · {rangeLabel(range)}
+              CME COMEX copper (HG) · USD / lb · {rangeLabel(range)}
             </CardDescription>
           </div>
 
@@ -225,7 +225,7 @@ export function CopperPriceChart({
             <AreaChart
               accessibilityLayer
               data={chartData}
-              margin={{ left: 4, right: 8, top: 8, bottom: 0 }}
+              margin={{ left: 12, right: 8, top: 8, bottom: 0 }}
             >
               <defs>
                 <linearGradient id="copperFill" x1="0" y1="0" x2="0" y2="1">
@@ -247,8 +247,19 @@ export function CopperPriceChart({
                 tickLine={false}
                 axisLine={false}
                 tickMargin={8}
-                width={56}
+                width={72}
                 tickFormatter={(v: number) => `$${v.toFixed(2)}`}
+                label={{
+                  value: "USD / lb",
+                  angle: -90,
+                  position: "insideLeft",
+                  offset: 4,
+                  style: {
+                    fill: "var(--muted-foreground)",
+                    fontSize: 10,
+                    fontWeight: 500,
+                  },
+                }}
               />
               <ChartTooltip
                 cursor={false}

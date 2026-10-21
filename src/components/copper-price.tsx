@@ -66,7 +66,7 @@ export function CopperPriceCard() {
               Copper price
             </CardTitle>
             <CardDescription className="text-xs">
-              {price?.feed_symbol ?? "PYTH COPPER 24/7"} · per pound
+              {price?.feed_symbol ?? "CME COMEX copper (HG)"} · USD / lb
             </CardDescription>
           </div>
           {price && !DEMO_MODE && <SourceBadge source={price.source} stale={price.stale} />}

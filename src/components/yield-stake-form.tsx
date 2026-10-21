@@ -156,7 +156,7 @@ export function YieldStakeForm() {
     await new Promise((r) => setTimeout(r, 700))
     setStaking(false)
     toast.success(
-      `Staked ${formatAmount(parsed!)} COPTT. You receive ${formatAmount(receive)} stCOPTT.`,
+      `Staked ${formatAmount(parsed!)} CuTTy. You receive ${formatAmount(receive)} stCuTTy.`,
     )
   }
 
@@ -165,9 +165,9 @@ export function YieldStakeForm() {
       <div className="mx-auto w-full max-w-md space-y-4">
         <Card>
           <CardHeader>
-            <CardTitle>Stake COPTT</CardTitle>
+            <CardTitle>Stake CuTTy</CardTitle>
             <CardDescription>
-              Receive stCOPTT 1:1. Connect a wallet, then enter an amount.
+              Receive stCuTTy 1:1. Connect a wallet, then enter an amount.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -181,7 +181,7 @@ export function YieldStakeForm() {
             >
               <FieldGroup>
                 <Field>
-                  <FieldLabel htmlFor="stake-amount">COPTT amount</FieldLabel>
+                  <FieldLabel htmlFor="stake-amount">CuTTy amount</FieldLabel>
                   <div className="flex gap-2">
                     <Input
                       id="stake-amount"
@@ -202,8 +202,8 @@ export function YieldStakeForm() {
                     </Button>
                   </div>
                   <FieldDescription>
-                    Equals {formatAmount(receive)} stCOPTT
-                    {connectedAddress ? ` · ${MOCK_BALANCE} COPTT available` : ""}
+                    Equals {formatAmount(receive)} stCuTTy
+                    {connectedAddress ? ` · ${MOCK_BALANCE} CuTTy available` : ""}
                   </FieldDescription>
                 </Field>
 
@@ -258,7 +258,7 @@ export function YieldStakeForm() {
           <CardContent className="flex items-center justify-between gap-3 pt-6">
             <p className="text-sm text-muted-foreground">
               Get a <span className="font-medium text-foreground">0.80% bonus</span> by
-              staking COPTT for stCOPTT
+              staking CuTTy for stCuTTy
             </p>
             <Button
               type="button"
@@ -277,9 +277,9 @@ export function YieldStakeForm() {
           <CardContent className="divide-y pt-2">
             <InfoRow
               label="You will receive"
-              value={`${formatAmount(receive)} stCOPTT`}
+              value={`${formatAmount(receive)} stCuTTy`}
             />
-            <InfoRow label="Exchange rate" value="1 COPTT = 1 stCOPTT" />
+            <InfoRow label="Exchange rate" value="1 CuTTy = 1 stCuTTy" />
             <InfoRow label="Max transaction cost" value="$0.03" />
             <InfoRow
               label="Reward fee"

@@ -51,7 +51,7 @@ export function YieldStats() {
     <TooltipProvider>
       <section className="mx-auto w-full max-w-md space-y-3">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-base font-semibold">Statistics of the COPTT protocol</h2>
+          <h2 className="text-base font-semibold">Statistics of the CuTTy protocol</h2>
           <Button
             variant="link"
             size="sm"
@@ -73,9 +73,9 @@ export function YieldStats() {
               valueClassName="tabular-nums font-medium text-emerald-600"
               hint="Moving average of staking rewards over the last 7 days. This is not a guaranteed return."
             />
-            <StatRow label="Total staked with COPTT" value="12,450.500 COPTT" />
+            <StatRow label="Total staked CuTTy" value="12,450.500 CuTTy" />
             <StatRow label="Stakers" value="1,284" />
-            <StatRow label="stCOPTT market cap" value="$180,532,250" />
+            <StatRow label="stCuTTy market cap" value="$180,532,250" />
           </CardContent>
         </Card>
       </section>

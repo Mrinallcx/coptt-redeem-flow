@@ -204,7 +204,7 @@ export function RedeemPanel() {
           </div>
 
           <p className="rounded-lg border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-            Your COPTT is held in escrow, not burned. If the delivery cannot be
+            Your CuTT is held in escrow, not burned. If the delivery cannot be
             completed the tokens come back to you. They are only destroyed once
             the metal has actually changed hands.
           </p>

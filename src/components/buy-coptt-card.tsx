@@ -413,7 +413,7 @@ export function BuyCopttCard() {
     try {
       const result = await copttApi.mint(accessToken, parsed)
       setLastMintTx(result.tx_hash)
-      toast.success(`Minted ${result.amount_lbs} COPTT to ${short(result.wallet)}`)
+      toast.success(`Minted ${result.amount_lbs} CuTT to ${short(result.wallet)}`)
     } catch (err) {
       if (err instanceof ApiRequestError) {
         // Surface the backend's machine-readable error code so the user
@@ -482,10 +482,10 @@ export function BuyCopttCard() {
           Subscription
         </p>
         <h2 className="mt-1 font-heading text-xl font-semibold tracking-tight text-stone-950">
-          Mint COPTT
+          Mint CuTT
         </h2>
         <p className="mt-2 text-sm text-stone-600">
-          Sepolia testnet · 1 COPTT = 1 lb copper · No payment required
+          Sepolia testnet · 1 CuTT = 1 lb copper · No payment required
         </p>
       </div>
 
@@ -629,7 +629,7 @@ export function BuyCopttCard() {
               ) : (
                 <CircleDollarSignIcon />
               )}
-              Mint COPTT
+              Mint CuTT
             </Button>
           </div>
           {lastMintTx ? (
