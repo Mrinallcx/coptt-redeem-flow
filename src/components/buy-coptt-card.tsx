@@ -38,6 +38,7 @@ import { sepolia } from "wagmi/chains"
 
 import { useAuth } from "@/contexts/auth-context"
 import { DEV_BYPASS_AUTH } from "@/lib/dev-bypass-auth"
+import { PAYMENT_MIN_CHECKOUT, PAYMENT_USD1_ADDON } from "@/lib/payment-display"
 import { USE_RAINBOWKIT } from "@/lib/wallet-mode"
 import { WalletConnectButton } from "@/components/wallet-connect-button"
 import {
@@ -485,7 +486,11 @@ export function BuyCopttCard() {
           Mint CuTT
         </h2>
         <p className="mt-2 text-sm text-stone-600">
-          Sepolia testnet · 1 CuTT = 1 lb copper · No payment required
+          Sepolia testnet · 1 CuTT = 1 lb copper · Test mint (no payment on Sepolia)
+        </p>
+        <p className="mt-1 text-xs text-stone-500">
+          {PAYMENT_MIN_CHECKOUT}. {PAYMENT_USD1_ADDON} Use Buy CuTT above for wallet or
+          bank checkout.
         </p>
       </div>
 

@@ -38,6 +38,12 @@ import { USE_RAINBOWKIT } from "@/lib/wallet-mode"
 import { cn } from "@/lib/utils"
 import { DEV_BYPASS_AUTH } from "@/lib/dev-bypass-auth"
 import { demoPurchaseConfig, demoPurchaseQuote } from "@/lib/demo-data"
+import {
+  CHECKOUT_SHEET_DESCRIPTION,
+  PAYMENT_CURRENCIES,
+  PAYMENT_SETTLEMENT_LINE,
+  formatPaymentAmount,
+} from "@/lib/payment-display"
 
 type PayMethod = "wallet" | "bank"
 type Step = "amount" | "price" | "method" | "confirm" | "working" | "done"
@@ -160,7 +166,7 @@ export function BuyFlow({ className }: { className?: string }) {
       await ensureChain(quote.chain_id)
 
       if (quote.approve_tx) {
-        setStatusLine(`Approve ${quote.pricing.payment_symbol} spending…`)
+        setStatusLine(`Approve ${PAYMENT_CURRENCIES} spending…`)
         const approveHash = await sendTx(connectedWallet, quote.approve_tx)
         setStatusLine("Waiting for the approval to confirm…")
         const approved = await waitForReceipt(approveHash)
@@ -217,20 +223,17 @@ export function BuyFlow({ className }: { className?: string }) {
       return method === "wallet" ? "Purchase complete" : "Transfer recorded"
     }
     if (step === "amount") return "Buy CuTT"
-    if (step === "price") return "Your price"
-    if (step === "method") return "Payment method"
+    if (step === "price") return `Your price · ${PAYMENT_CURRENCIES}`
+    if (step === "method") return `Payment method · ${PAYMENT_CURRENCIES}`
     if (step === "confirm") {
-      return method === "wallet" ? "Pay with wallet" : "Bank transfer"
+      return method === "wallet"
+        ? `Pay with wallet · ${PAYMENT_CURRENCIES}`
+        : `Bank transfer · ${PAYMENT_CURRENCIES}`
     }
     return "Buy CuTT"
   }, [step, method])
 
-  const totalLabel = quote
-    ? `${quote.pricing.total_usd.toLocaleString(undefined, {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })} ${quote.pricing.payment_symbol}`
-    : "—"
+  const totalLabel = quote ? formatPaymentAmount(quote.pricing.total_usd) : "—"
 
   return (
     <>
@@ -240,7 +243,7 @@ export function BuyFlow({ className }: { className?: string }) {
             <p className="text-sm font-semibold">Buy CuTT</p>
             <p className="mt-1 text-xs text-muted-foreground">
               1 CuTT = 1 lb of COMEX Grade 1 copper
-              {config ? ` · settled in ${config.payment_symbol}` : ""}
+              {config ? ` · ${PAYMENT_SETTLEMENT_LINE}` : ""}
             </p>
           </div>
           <Button
@@ -263,7 +266,7 @@ export function BuyFlow({ className }: { className?: string }) {
               {step === "done"
                 ? "You can close this panel."
                 : config
-                  ? `Minimum ${config.min_amount_lb} lb · paid in ${config.payment_symbol}`
+                  ? CHECKOUT_SHEET_DESCRIPTION
                   : "Loading…"}
             </SheetDescription>
           </SheetHeader>
@@ -313,19 +316,20 @@ export function BuyFlow({ className }: { className?: string }) {
 
             {step === "method" ? (
               <div className="space-y-3">
+                <p className="text-xs text-muted-foreground">{CHECKOUT_SHEET_DESCRIPTION}</p>
                 <PayOption
                   selected={method === "wallet"}
                   onSelect={() => setMethod("wallet")}
                   icon={<WalletIcon className="size-4" />}
-                  title="Wallet"
-                  detail="Connect your wallet and confirm on-chain."
+                  title={`Wallet · ${PAYMENT_CURRENCIES}`}
+                  detail={`Pay with ${PAYMENT_CURRENCIES} from your connected wallet.`}
                 />
                 <PayOption
                   selected={method === "bank"}
                   onSelect={() => setMethod("bank")}
                   icon={<LandmarkIcon className="size-4" />}
-                  title="Bank transfer"
-                  detail="Wire funds using the details we provide."
+                  title={`Bank transfer · ${PAYMENT_CURRENCIES}`}
+                  detail={`Wire USD; settlement in ${PAYMENT_CURRENCIES} on receipt.`}
                 />
               </div>
             ) : null}
@@ -333,6 +337,9 @@ export function BuyFlow({ className }: { className?: string }) {
             {quote && step === "confirm" && method === "wallet" ? (
               <div className="space-y-4">
                 <OrderSummary quote={quote} totalLabel={totalLabel} />
+                <p className="text-xs text-muted-foreground">
+                  Checkout settles in {PAYMENT_CURRENCIES}.
+                </p>
                 {connectedWallet ? (
                   <p className="rounded-lg border bg-muted/40 px-3 py-2 text-sm">
                     Connected{" "}
@@ -347,7 +354,7 @@ export function BuyFlow({ className }: { className?: string }) {
                 )}
                 {!DEV_BYPASS_AUTH && !quote.approval.sufficient_funds ? (
                   <p className="rounded-lg border border-amber-500/40 bg-amber-50/60 px-3 py-2 text-xs dark:bg-amber-950/20">
-                    Not enough {quote.pricing.payment_symbol} in this wallet.
+                    Not enough {PAYMENT_CURRENCIES} in this wallet.
                   </p>
                 ) : null}
               </div>
@@ -357,15 +364,17 @@ export function BuyFlow({ className }: { className?: string }) {
               <div className="space-y-4">
                 <OrderSummary quote={quote} totalLabel={totalLabel} />
                 <dl className="divide-y rounded-lg border text-sm">
-                  <BankRow label="Beneficiary" value="Toto Finance Holdings LLC" />
-                  <BankRow label="Bank" value="JPMorgan Chase Bank, N.A." />
+                  <BankRow label="Beneficiary" value="Toto Finance Inc." />
+                  <BankRow label="Bank" value="Erebor Bank" />
                   <BankRow label="Routing (ABA)" value="021000021" />
                   <BankRow label="Account number" value="1234567890" />
+                  <BankRow label="Settlement" value={PAYMENT_CURRENCIES} />
                   <BankRow label="Reference" value={bankReference ?? "—"} />
                   <BankRow label="Amount" value={totalLabel} />
                 </dl>
                 <p className="text-xs text-muted-foreground">
-                  Use the reference exactly so we can match your transfer.
+                  Use the reference exactly so we can match your transfer. Settlement in{" "}
+                  {PAYMENT_CURRENCIES}.
                 </p>
               </div>
             ) : null}
@@ -547,16 +556,9 @@ function QuoteBreakdown({
         <Row label="Spread" value={`${(quote.pricing.spread_bps / 100).toFixed(2)}%`} />
         <Row
           label="Your price"
-          value={`$${quote.pricing.effective_usd_per_lb.toFixed(4)} / lb`}
+          value={`$${quote.pricing.effective_usd_per_lb.toFixed(4)} / lb · ${PAYMENT_CURRENCIES}`}
         />
-        <Row
-          label="Total"
-          value={`${quote.pricing.total_usd.toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })} ${quote.pricing.payment_symbol}`}
-          strong
-        />
+        <Row label="Total" value={formatPaymentAmount(quote.pricing.total_usd)} strong />
       </dl>
 
       <div className="flex items-center justify-between text-xs">
@@ -578,14 +580,14 @@ function QuoteBreakdown({
 
       {showWalletHints && !quote.approval.sufficient_funds ? (
         <p className="rounded-lg border border-amber-500/40 bg-amber-50/60 px-3 py-2 text-xs dark:bg-amber-950/20">
-          Wallet checkout needs enough {quote.pricing.payment_symbol}. Bank transfer is
+          Wallet checkout needs enough {PAYMENT_CURRENCIES}. Bank transfer is
           available on the next step.
         </p>
       ) : null}
 
       {showWalletHints && quote.approve_tx ? (
         <p className="text-xs text-muted-foreground">
-          Wallet checkout may ask you to approve {quote.pricing.payment_symbol} spending,
+          Wallet checkout may ask you to approve {PAYMENT_CURRENCIES} spending,
           then confirm the purchase.
         </p>
       ) : null}

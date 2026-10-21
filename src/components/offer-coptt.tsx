@@ -22,6 +22,7 @@ const HIGHLIGHTS = [
   "ERC-20 on Ethereum with transparent supply and on-chain settlement",
   "Optional physical redemption for institutional holders",
   "KYC-gated wallets only, fully regulatory-compliant",
+  "Minimum 1 lb · Paid in USDC; USD1 also accepted (wallet or bank transfer)",
 ]
 
 const OFFER_RISKS = [

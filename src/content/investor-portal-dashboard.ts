@@ -1,6 +1,5 @@
 /**
- * Dashboard offer cards — single source of truth aligned with
- * Investor_Portal_Changes.pages (CuTT / CuTTy / CuTTr branding applied in UI).
+ * Dashboard offer cards — single source of truth (product copy).
  */
 
 export type DashboardOfferSpec = { label: string; value: string }
@@ -20,11 +19,23 @@ export type DashboardOfferCard = {
 export const COMEX_UNDERLYING =
   "COMEX Grade 1 copper cathode, deliverable grade"
 
-export const VAULT_MIN_TICKET =
-  "1 CuTT (1 lb), institutional minimums per Reg D 506(b) / Reg S"
+export const VAULT_MIN_TICKET = "1 CuTT (1 lb), institutional minimums"
 
-export const STAKE_MIN_TICKET =
-  "1 CuTTy (1 lb), institutional minimums per Reg D 506(b) / Reg S"
+export const STAKE_MIN_TICKET = "1 CuTTy (1 lb), institutional minimums"
+
+/** Warrant-backed vault inventory (same wording on dashboard + investments). */
+export const NEW_ORLEANS_AVAILABLE =
+  "23,800 tonnes (confirm against official warrant inventory)"
+
+export const TUCSON_AVAILABLE =
+  "101,670 tonnes (confirm against official warrant inventory)"
+
+export const LOS_AZULES_EXPOSURE = "2,500,000 lb (1,134 t)"
+
+export const KAMOA_EXPOSURE = "330,000 tonnes (2026 run-rate basis)"
+
+/** CuTTy products: 1 token = 1 lb COMEX exposure (no separate tonne inventory). */
+export const CUTTY_NOTIONAL_PER_TOKEN = "1 CuTTy = 1 lb COMEX copper exposure"
 
 function vaultLivePrice(city: string) {
   return `Full CME COMEX copper price + ${city} in-warehouse premium (oracle-fed, real-time)`
@@ -43,10 +54,7 @@ const newOrleansVault: DashboardOfferCard = {
       value: "New Orleans, LA, USA (FDA-approved warehouse)",
     },
     { label: "LIVE PRICE", value: vaultLivePrice("New Orleans") },
-    {
-      label: "AVAILABLE",
-      value: "[X,000 tonnes], confirm from warrant inventory",
-    },
+    { label: "AVAILABLE", value: NEW_ORLEANS_AVAILABLE },
     { label: "MIN. TICKET", value: VAULT_MIN_TICKET },
   ],
 }
@@ -55,7 +63,7 @@ const tucsonVault: DashboardOfferCard = {
   ticker: "CuTT",
   subtitle: "Tucson Vault",
   category: "Commodities",
-  comingSoon: true,
+  href: "/offers/coptt",
   coverImage: "/copper-vault.jpg",
   specs: [
     { label: "UNDERLYING", value: COMEX_UNDERLYING },
@@ -64,35 +72,8 @@ const tucsonVault: DashboardOfferCard = {
       value: "Tucson, AZ, USA (FDA-approved warehouse)",
     },
     { label: "LIVE PRICE", value: vaultLivePrice("Tucson") },
-    {
-      label: "AVAILABLE",
-      value: "[X,000 tonnes], confirm from warrant inventory",
-    },
+    { label: "AVAILABLE", value: TUCSON_AVAILABLE },
     { label: "MIN. TICKET", value: VAULT_MIN_TICKET },
-  ],
-}
-
-const cuttyStaking: DashboardOfferCard = {
-  ticker: "CuTTy",
-  subtitle: "Staking",
-  category: "Commodities",
-  href: "/yield",
-  showLiveBadge: false,
-  coverImage: "/copper-banner-coils.jpg",
-  specs: [
-    {
-      label: "YIELD SOURCE",
-      value: "Share of Toto Finance platform fees",
-    },
-    {
-      label: "UNDERLYING",
-      value: "Full CME COMEX copper price exposure",
-    },
-    {
-      label: "DISTRIBUTION",
-      value: "Quarterly, every 3 months from first issuance",
-    },
-    { label: "MIN. TICKET", value: STAKE_MIN_TICKET },
   ],
 }
 
@@ -121,10 +102,7 @@ const losAzulesRoyalties: DashboardOfferCard = {
       label: "FUTURE PRODUCTION",
       value: "First delivery 2030 target",
     },
-    {
-      label: "EXPOSURE",
-      value: "25,000 lb (11.34 t)",
-    },
+    { label: "EXPOSURE", value: LOS_AZULES_EXPOSURE },
     {
       label: "YIELD SOURCE",
       value: "Share of copper produced by Toto Finance mine programs",
@@ -150,25 +128,18 @@ const kamoaRoyalties: DashboardOfferCard = {
     },
     {
       label: "MINING PARTNER",
-      value: "Ivanhoe Mines and Zijin Mining (via Kamoa Holding)",
+      value: "NYSE-listed mining group (named under NDA)",
     },
     { label: "STAGE", value: "In production, ramping" },
     {
       label: "FUTURE PRODUCTION",
       value: "First delivery May 2027",
     },
-    {
-      label: "EXPOSURE",
-      value: "To be defined once a mandate is signed",
-    },
+    { label: "EXPOSURE", value: KAMOA_EXPOSURE },
     {
       label: "RUN-RATE",
       value:
         "About 290,000 to 330,000 t/y (2026), scaling toward 500,000+ t/y from 2028",
-    },
-    {
-      label: "YIELD SOURCE",
-      value: "Share of copper produced by Toto Finance mine programs",
     },
     {
       label: "DISTRIBUTION",
@@ -177,18 +148,71 @@ const kamoaRoyalties: DashboardOfferCard = {
   ],
 }
 
-/** Row 1: New Orleans, Tucson, CuTTy Staking */
-export const DASHBOARD_ROW_ONE: DashboardOfferCard[] = [
+const cuttyRoyaltyStreams: DashboardOfferCard = {
+  ticker: "CuTTy",
+  subtitle: "Royalty streams",
+  category: "Commodities",
+  comingSoon: true,
+  ctaLabel: "View details",
+  coverImage: "/copper-banner-mine.jpg",
+  specs: [
+    {
+      label: "YIELD SOURCE",
+      value: "Share of Toto Finance platform fees and mine royalty streams",
+    },
+    {
+      label: "UNDERLYING",
+      value: "Full CME COMEX copper price exposure",
+    },
+    { label: "NOTIONAL", value: CUTTY_NOTIONAL_PER_TOKEN },
+    {
+      label: "DISTRIBUTION",
+      value: "Quarterly, every 3 months from first issuance",
+    },
+    { label: "MIN. TICKET", value: STAKE_MIN_TICKET },
+  ],
+}
+
+const cuttyStaking: DashboardOfferCard = {
+  ticker: "CuTTy",
+  subtitle: "Staking",
+  category: "Commodities",
+  href: "/yield",
+  showLiveBadge: false,
+  coverImage: "/copper-mine.jpg",
+  specs: [
+    {
+      label: "YIELD SOURCE",
+      value: "Share of Toto Finance platform fees",
+    },
+    {
+      label: "UNDERLYING",
+      value: "Full CME COMEX copper price exposure",
+    },
+    { label: "NOTIONAL", value: CUTTY_NOTIONAL_PER_TOKEN },
+    {
+      label: "DISTRIBUTION",
+      value: "Daily, every 24 hours from first issuance",
+    },
+    { label: "MIN. TICKET", value: STAKE_MIN_TICKET },
+  ],
+}
+
+/** Dashboard card order (CuTTy Staking is always last). */
+export const DASHBOARD_OFFER_CARDS: DashboardOfferCard[] = [
   newOrleansVault,
   tucsonVault,
+  losAzulesRoyalties,
+  kamoaRoyalties,
+  cuttyRoyaltyStreams,
   cuttyStaking,
 ]
 
-/** Row 2: Los Azules royalties, Kamoa-Kakula royalties */
-export const DASHBOARD_ROW_TWO: DashboardOfferCard[] = [
-  losAzulesRoyalties,
-  kamoaRoyalties,
-]
+/** @deprecated Use `DASHBOARD_OFFER_CARDS` — kept for docs / splits */
+export const DASHBOARD_ROW_ONE = DASHBOARD_OFFER_CARDS.slice(0, 3)
+
+/** @deprecated Use `DASHBOARD_OFFER_CARDS` — staking is the final entry */
+export const DASHBOARD_ROW_TWO = DASHBOARD_OFFER_CARDS.slice(3)
 
 export const NEW_ORLEANS_VAULT_SPECS = newOrleansVault.specs
 

@@ -15,6 +15,14 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { TrendingUpIcon, TrendingDownIcon, MinusIcon } from "lucide-react"
 
+import {
+  KAMOA_EXPOSURE,
+  LOS_AZULES_EXPOSURE,
+  NEW_ORLEANS_AVAILABLE,
+  TUCSON_AVAILABLE,
+  VAULT_MIN_TICKET,
+} from "@/content/investor-portal-dashboard"
+
 type TokenDetail = { label: string; value: string }
 
 type ChartPoint = { date: string; value: number }
@@ -63,7 +71,8 @@ const positions: Position[] = [
       { label: "Current Price", value: "$6.58/lb" },
       { label: "Underlying", value: "COMEX Grade 1 cathode" },
       { label: "Location", value: "New Orleans, LA" },
-      { label: "Min. Ticket", value: "1 CuTT (1 lb)" },
+      { label: "Available", value: NEW_ORLEANS_AVAILABLE },
+      { label: "Min. Ticket", value: VAULT_MIN_TICKET },
       { label: "Unrealised P&L", value: "+$2,900" },
     ],
     investedOn: "15/11/2025",
@@ -95,7 +104,8 @@ const positions: Position[] = [
       { label: "Current Price", value: "$6.58/lb" },
       { label: "Underlying", value: "COMEX Grade 1 cathode" },
       { label: "Location", value: "Tucson, AZ" },
-      { label: "Min. Ticket", value: "1 CuTT (1 lb)" },
+      { label: "Available", value: TUCSON_AVAILABLE },
+      { label: "Min. Ticket", value: VAULT_MIN_TICKET },
       { label: "Unrealised P&L", value: "$0" },
     ],
     investedOn: "01/02/2026",
@@ -119,12 +129,12 @@ const positions: Position[] = [
     performanceLabel: "0%",
     details: [
       { label: "Tokens Held", value: "2 CuTTr" },
-      { label: "Quantity", value: "25,000 lb exposure" },
+      { label: "Exposure", value: LOS_AZULES_EXPOSURE },
       { label: "Entry Price", value: "Pending" },
       { label: "Deposit", value: "Los Azules, Argentina" },
       {
         label: "Mining Partner",
-        value: "TSX/NYSE-listed mining group (NDA)",
+        value: "TSX/NYSE-listed mining group (named under NDA)",
       },
       { label: "Future Production", value: "2030 target" },
       { label: "Stage", value: "Pre-production" },
@@ -152,12 +162,14 @@ const positions: Position[] = [
     performanceLabel: "0%",
     details: [
       { label: "Tokens Held", value: "2 CuTTr" },
-      { label: "Quantity", value: "2 lb equiv." },
+      { label: "Exposure", value: KAMOA_EXPOSURE },
       { label: "Entry Price", value: "Pending mandate" },
       { label: "Deposit", value: "Kamoa-Kakula, DRC" },
-      { label: "Mining Partner", value: "Ivanhoe / Zijin" },
+      {
+        label: "Mining Partner",
+        value: "NYSE-listed mining group (named under NDA)",
+      },
       { label: "Future Production", value: "May 2027" },
-      { label: "Exposure", value: "TBD, mandate pending" },
       { label: "Unrealised P&L", value: "$0" },
     ],
     investedOn: "12/03/2026",

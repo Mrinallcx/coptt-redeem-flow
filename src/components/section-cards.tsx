@@ -8,8 +8,7 @@ import { CopperPriceCard } from "@/components/copper-price"
 import { CopperPriceChart } from "@/components/copper-price-chart"
 import {
   DASHBOARD_BANNER_TAGLINE,
-  DASHBOARD_ROW_ONE,
-  DASHBOARD_ROW_TWO,
+  DASHBOARD_OFFER_CARDS,
   type DashboardOfferCard,
   type DashboardOfferSpec,
 } from "@/content/investor-portal-dashboard"
@@ -167,8 +166,7 @@ function toUiCard(card: DashboardOfferCard): OfferCard {
 }
 
 export function SectionCards() {
-  const rowOne = DASHBOARD_ROW_ONE.map(toUiCard)
-  const rowTwo = DASHBOARD_ROW_TWO.map(toUiCard)
+  const offers = DASHBOARD_OFFER_CARDS.map(toUiCard)
 
   return (
     <div className="flex flex-col gap-8 px-4 lg:px-6">
@@ -194,12 +192,7 @@ export function SectionCards() {
         </div>
       </div>
       <div className="grid auto-rows-fr grid-cols-1 gap-4 @xl/main:grid-cols-2 @5xl/main:grid-cols-3">
-        {rowOne.map((offer, index) => (
-          <OfferCardItem key={`${offer.ticker}-${offer.subtitle}-${index}`} {...offer} />
-        ))}
-      </div>
-      <div className="grid auto-rows-fr grid-cols-1 gap-4 @xl/main:grid-cols-2 @5xl/main:max-w-[calc(66.666%-0.67rem)]">
-        {rowTwo.map((offer, index) => (
+        {offers.map((offer, index) => (
           <OfferCardItem key={`${offer.ticker}-${offer.subtitle}-${index}`} {...offer} />
         ))}
       </div>
