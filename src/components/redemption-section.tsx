@@ -26,8 +26,8 @@ export function RedemptionSection() {
             Redemption
           </h1>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            Redeem CuTT vault holdings for physical COMEX Grade 1 copper from the
-            warehouse where your tokens are allocated.
+            Redeem CuTT vault holdings in 25,000-tonne lots for physical COMEX Grade 1
+            copper. Choose warehouse pickup or insured delivery to your address.
           </p>
         </div>
         <div className="grid auto-rows-fr grid-cols-1 gap-4 @xl/main:grid-cols-2 @5xl/main:grid-cols-3">
