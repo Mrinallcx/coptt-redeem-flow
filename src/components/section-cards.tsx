@@ -28,7 +28,7 @@ export function SectionCards() {
             Commodities
           </p>
           <h2 className="mt-1.5 font-heading text-3xl font-semibold tracking-tight text-white md:text-5xl">
-            Physical copper
+            Physical copper, tokenized
           </h2>
           <p className="mt-2 max-w-2xl text-base text-white/75 md:text-lg">
             {DASHBOARD_BANNER_TAGLINE}
