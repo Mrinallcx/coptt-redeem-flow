@@ -121,7 +121,7 @@ export function demoPurchaseConfig(): PurchaseConfig {
     spread_bps: 50,
     quote_validity_secs: 600,
     min_amount_lb: 1,
-    max_amount_lb: 100_000,
+    max_amount_lb: 1_000_000,
     paused: false,
     accepting: true,
   }

@@ -6,6 +6,7 @@ import {
   CircleHelpIcon,
   FolderIcon,
   LayoutDashboardIcon,
+  PackageIcon,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -40,6 +41,11 @@ const data = {
         <FolderIcon
         />
       ),
+    },
+    {
+      title: "Redemption",
+      url: "/redemption",
+      icon: <PackageIcon />,
     },
   ],
 }

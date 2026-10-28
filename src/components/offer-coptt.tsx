@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
 import { BuyCopttCard } from "@/components/buy-coptt-card"
 import { BuyFlow } from "@/components/buy-flow"
-import { NEW_ORLEANS_VAULT_SPECS } from "@/content/investor-portal-dashboard"
+import { CUPTT_VAULT_OFFER_SPECS, COPTT_VAULT_OPTIONS } from "@/content/investor-portal-dashboard"
 import { PAYMENT_MIN_CHECKOUT } from "@/lib/payment-display"
 
 const VAULT_HIGHLIGHT_LABELS = new Set(["UNDERLYING", "LOCATION", "MIN. TICKET"])
@@ -75,23 +75,38 @@ function downloadDocument(title: string, filename: string) {
 
 function VaultDetails() {
   return (
-    <dl className="divide-y rounded-lg border">
-      {NEW_ORLEANS_VAULT_SPECS.map((spec) => (
-        <div
-          key={spec.label}
-          className={cn(
-            "grid gap-1 px-4 py-3 sm:grid-cols-[8rem_1fr]",
-            VAULT_HIGHLIGHT_LABELS.has(spec.label) &&
-              "bg-amber-50/50 dark:bg-amber-950/20",
-          )}
-        >
-          <dt className="text-[11px] font-medium tracking-wide text-muted-foreground">
-            {spec.label}
-          </dt>
-          <dd className="text-sm leading-snug text-foreground">{spec.value}</dd>
-        </div>
-      ))}
-    </dl>
+    <div className="space-y-4">
+      <dl className="divide-y rounded-lg border">
+        {CUPTT_VAULT_OFFER_SPECS.map((spec) => (
+          <div
+            key={spec.label}
+            className={cn(
+              "grid gap-1 px-4 py-3 sm:grid-cols-[8rem_1fr]",
+              VAULT_HIGHLIGHT_LABELS.has(spec.label) &&
+                "bg-amber-50/50 dark:bg-amber-950/20",
+            )}
+          >
+            <dt className="text-[11px] font-medium tracking-wide text-muted-foreground">
+              {spec.label}
+            </dt>
+            <dd className="text-sm leading-snug text-foreground">{spec.value}</dd>
+          </div>
+        ))}
+      </dl>
+      <div className="rounded-lg border">
+        <p className="border-b px-4 py-2 text-[11px] font-medium tracking-wide text-muted-foreground">
+          VAULT INVENTORY
+        </p>
+        <ul className="divide-y">
+          {COPTT_VAULT_OPTIONS.map((vault) => (
+            <li key={vault.id} className="px-4 py-3 text-sm">
+              <p className="font-medium">{vault.label}</p>
+              <p className="mt-1 text-muted-foreground">{vault.available}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
   )
 }
 
@@ -200,10 +215,11 @@ export function OfferCoptt() {
           <h1 className="mt-4 font-heading text-3xl font-semibold tracking-tight">
             CuTT
           </h1>
-          <p className="mt-1 text-muted-foreground">New Orleans Vault</p>
+          <p className="mt-1 text-muted-foreground">Bonded vaults</p>
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            COMEX Grade 1 copper cathode in an FDA-approved New Orleans warehouse.
-            1 CuTT represents 1 lb of deliverable copper with on-chain settlement.
+            COMEX Grade 1 copper cathode in FDA-approved New Orleans and Tucson warehouses.
+            Choose your vault at checkout. 1 CuTT represents 1 lb of deliverable copper with
+            on-chain settlement.
           </p>
         </div>
       </header>

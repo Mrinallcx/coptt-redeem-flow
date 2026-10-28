@@ -44,6 +44,10 @@ import {
   PAYMENT_MIN_CHECKOUT,
   formatPaymentAmount,
 } from "@/lib/payment-display"
+import {
+  COPTT_VAULT_OPTIONS,
+  type CopttVaultId,
+} from "@/content/investor-portal-dashboard"
 
 type PayMethod = "wallet" | "bank"
 type Step = "amount" | "price" | "method" | "confirm" | "working" | "done"
@@ -61,6 +65,11 @@ export function BuyFlow({ className }: { className?: string }) {
   const connectedWallet = USE_RAINBOWKIT ? rainbowAddress : wallet
 
   const [amountLb, setAmountLb] = useState("100")
+  const [vaultId, setVaultId] = useState<CopttVaultId>(COPTT_VAULT_OPTIONS[0].id)
+  const selectedVault = useMemo(
+    () => COPTT_VAULT_OPTIONS.find((v) => v.id === vaultId) ?? COPTT_VAULT_OPTIONS[0],
+    [vaultId],
+  )
   const [busy, setBusy] = useState(false)
   const [statusLine, setStatusLine] = useState("")
   const [txHash, setTxHash] = useState<string | null>(null)
@@ -103,6 +112,7 @@ export function BuyFlow({ className }: { className?: string }) {
     setTxHash(null)
     setError(null)
     setSecondsLeft(null)
+    setVaultId(COPTT_VAULT_OPTIONS[0].id)
   }, [])
 
   const close = (next: boolean) => {
@@ -293,6 +303,20 @@ export function BuyFlow({ className }: { className?: string }) {
                     </p>
                   ) : null}
                 </div>
+                <div className="space-y-2">
+                  <Label>Vault</Label>
+                  <div className="space-y-2">
+                    {COPTT_VAULT_OPTIONS.map((vault) => (
+                      <VaultOption
+                        key={vault.id}
+                        selected={vaultId === vault.id}
+                        onSelect={() => setVaultId(vault.id)}
+                        title={vault.label}
+                        detail={`${vault.availableShort} available · ${vault.location}`}
+                      />
+                    ))}
+                  </div>
+                </div>
                 {config ? (
                   <p className="text-xs text-muted-foreground">
                     Price is fixed when you continue and held for{" "}
@@ -308,6 +332,7 @@ export function BuyFlow({ className }: { className?: string }) {
                 expired={expired}
                 secondsLeft={secondsLeft}
                 showWalletHints
+                vaultLabel={selectedVault.label}
               />
             ) : null}
 
@@ -332,7 +357,11 @@ export function BuyFlow({ className }: { className?: string }) {
 
             {quote && step === "confirm" && method === "wallet" ? (
               <div className="space-y-4">
-                <OrderSummary quote={quote} totalLabel={totalLabel} />
+                <OrderSummary
+                  quote={quote}
+                  totalLabel={totalLabel}
+                  vaultLabel={selectedVault.label}
+                />
                 <p className="text-xs text-muted-foreground">
                   Checkout settles in {PAYMENT_CURRENCIES}.
                 </p>
@@ -358,7 +387,11 @@ export function BuyFlow({ className }: { className?: string }) {
 
             {quote && step === "confirm" && method === "bank" ? (
               <div className="space-y-4">
-                <OrderSummary quote={quote} totalLabel={totalLabel} />
+                <OrderSummary
+                  quote={quote}
+                  totalLabel={totalLabel}
+                  vaultLabel={selectedVault.label}
+                />
                 <dl className="divide-y rounded-lg border text-sm">
                   <BankRow label="Beneficiary" value="Toto Finance Inc." />
                   <BankRow label="Bank" value="Erebor Bank" />
@@ -515,15 +548,17 @@ export function BuyFlow({ className }: { className?: string }) {
 function OrderSummary({
   quote,
   totalLabel,
+  vaultLabel,
 }: {
   quote: PurchaseQuote
   totalLabel: string
+  vaultLabel: string
 }) {
   return (
     <div className="rounded-lg border bg-muted/30 px-3 py-3 text-sm">
       <p className="font-semibold tabular-nums">{totalLabel}</p>
       <p className="mt-1 text-xs text-muted-foreground">
-        {quote.pricing.amount_lb} lb CuTT · $
+        {vaultLabel} · {quote.pricing.amount_lb} lb CuTT · $
         {quote.pricing.effective_usd_per_lb.toFixed(4)} / lb
       </p>
     </div>
@@ -535,15 +570,18 @@ function QuoteBreakdown({
   expired,
   secondsLeft,
   showWalletHints,
+  vaultLabel,
 }: {
   quote: PurchaseQuote
   expired: boolean
   secondsLeft: number | null
   showWalletHints?: boolean
+  vaultLabel?: string
 }) {
   return (
     <div className="space-y-4">
       <dl className="divide-y rounded-lg border text-sm">
+        {vaultLabel ? <Row label="Vault" value={vaultLabel} /> : null}
         <Row label="Amount" value={`${quote.pricing.amount_lb} lb`} />
         <Row
           label="Index price"
@@ -588,6 +626,43 @@ function QuoteBreakdown({
         </p>
       ) : null}
     </div>
+  )
+}
+
+function VaultOption({
+  selected,
+  onSelect,
+  title,
+  detail,
+}: {
+  selected: boolean
+  onSelect: () => void
+  title: string
+  detail: string
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={cn(
+        "flex w-full items-start gap-3 rounded-lg border px-3 py-3 text-left transition-colors",
+        selected
+          ? "border-[#B87333]/50 bg-amber-50/60 dark:bg-amber-950/20"
+          : "hover:bg-muted/50",
+      )}
+    >
+      <span
+        className={cn(
+          "mt-1 size-4 shrink-0 rounded-full border-2",
+          selected ? "border-[#B87333] bg-[#B87333]" : "border-muted-foreground/40",
+        )}
+        aria-hidden
+      />
+      <span>
+        <span className="block text-sm font-medium">{title}</span>
+        <span className="mt-0.5 block text-xs text-muted-foreground">{detail}</span>
+      </span>
+    </button>
   )
 }
 

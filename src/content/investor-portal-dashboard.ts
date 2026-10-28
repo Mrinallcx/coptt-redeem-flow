@@ -37,13 +37,41 @@ export const KAMOA_EXPOSURE = "330,000 tonnes (2026 run-rate basis)"
 /** CuTTy products: 1 token = 1 lb COMEX exposure (no separate tonne inventory). */
 export const CUTTY_NOTIONAL_PER_TOKEN = "1 CuTTy = 1 lb COMEX copper exposure"
 
-function vaultLivePrice(city: string) {
-  return `Full CME COMEX copper price + ${city} in-warehouse premium (oracle-fed, real-time)`
+/** CuTT bonded warehouses — selectable at checkout. */
+export type CopttVaultId = "new-orleans" | "tucson"
+
+export type CopttVaultOption = {
+  id: CopttVaultId
+  label: string
+  location: string
+  available: string
+  /** Shown in checkout vault picker, e.g. "23,800 tonnes". */
+  availableShort: string
+  premiumCity: string
 }
 
-const newOrleansVault: DashboardOfferCard = {
+export const COPTT_VAULT_OPTIONS: CopttVaultOption[] = [
+  {
+    id: "new-orleans",
+    label: "New Orleans Vault",
+    location: "New Orleans, LA, USA (FDA-approved warehouse)",
+    available: NEW_ORLEANS_AVAILABLE,
+    availableShort: "23,800 tonnes",
+    premiumCity: "New Orleans",
+  },
+  {
+    id: "tucson",
+    label: "Tucson Vault",
+    location: "Tucson, AZ, USA (FDA-approved warehouse)",
+    available: TUCSON_AVAILABLE,
+    availableShort: "101,670 tonnes",
+    premiumCity: "Tucson",
+  },
+]
+
+const cuttVaultCard: DashboardOfferCard = {
   ticker: "CuTT",
-  subtitle: "New Orleans Vault",
+  subtitle: "Bonded vaults",
   category: "Commodities",
   href: "/offers/coptt",
   coverImage: "/copper-vault.jpg",
@@ -51,29 +79,22 @@ const newOrleansVault: DashboardOfferCard = {
     { label: "UNDERLYING", value: COMEX_UNDERLYING },
     {
       label: "LOCATION",
-      value: "New Orleans, LA, USA (FDA-approved warehouse)",
+      value: "New Orleans, LA and Tucson, AZ (FDA-approved warehouses)",
     },
-    { label: "LIVE PRICE", value: vaultLivePrice("New Orleans") },
-    { label: "AVAILABLE", value: NEW_ORLEANS_AVAILABLE },
-    { label: "MIN. TICKET", value: VAULT_MIN_TICKET },
-  ],
-}
-
-const tucsonVault: DashboardOfferCard = {
-  ticker: "CuTT",
-  subtitle: "Tucson Vault",
-  category: "Commodities",
-  href: "/offers/coptt",
-  coverImage: "/copper-vault.jpg",
-  specs: [
-    { label: "UNDERLYING", value: COMEX_UNDERLYING },
     {
-      label: "LOCATION",
-      value: "Tucson, AZ, USA (FDA-approved warehouse)",
+      label: "LIVE PRICE",
+      value:
+        "Full CME COMEX copper price + in-warehouse premium by vault (oracle-fed, real-time)",
     },
-    { label: "LIVE PRICE", value: vaultLivePrice("Tucson") },
-    { label: "AVAILABLE", value: TUCSON_AVAILABLE },
-    { label: "MIN. TICKET", value: VAULT_MIN_TICKET },
+    {
+      label: "AVAILABLE",
+      value:
+        "New Orleans: 23,800 t · Tucson: 101,670 t (confirm against official warrant inventory)",
+    },
+    {
+      label: "MIN. TICKET",
+      value: VAULT_MIN_TICKET,
+    },
   ],
 }
 
@@ -200,8 +221,7 @@ const cuttyStaking: DashboardOfferCard = {
 
 /** Dashboard card order (CuTTy Staking is always last). */
 export const DASHBOARD_OFFER_CARDS: DashboardOfferCard[] = [
-  newOrleansVault,
-  tucsonVault,
+  cuttVaultCard,
   losAzulesRoyalties,
   kamoaRoyalties,
   cuttyRoyaltyStreams,
@@ -214,7 +234,10 @@ export const DASHBOARD_ROW_ONE = DASHBOARD_OFFER_CARDS.slice(0, 3)
 /** @deprecated Use `DASHBOARD_OFFER_CARDS` — staking is the final entry */
 export const DASHBOARD_ROW_TWO = DASHBOARD_OFFER_CARDS.slice(3)
 
-export const NEW_ORLEANS_VAULT_SPECS = newOrleansVault.specs
+export const CUPTT_VAULT_OFFER_SPECS: DashboardOfferSpec[] = cuttVaultCard.specs
+
+/** @deprecated Use `CUPTT_VAULT_OFFER_SPECS` */
+export const NEW_ORLEANS_VAULT_SPECS = CUPTT_VAULT_OFFER_SPECS
 
 export const DASHBOARD_BANNER_TAGLINE =
   "COMEX Grade 1 cathode in bonded warehouses. 1 CuTT = 1 lb."

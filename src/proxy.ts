@@ -21,7 +21,7 @@ const SESSION_COOKIE_NAME = "coptt_session";
 // Page-level groups proxy cares about. Anything not in these lists is
 // treated as public — `/auth/verify`, `/auth/forgot-password` etc. need
 // to be reachable while signed out for their links to work.
-const PROTECTED_PREFIXES = ["/dashboard", "/investments", "/yield", "/settings", "/kyc", "/offers"];
+const PROTECTED_PREFIXES = ["/dashboard", "/investments", "/redemption", "/yield", "/settings", "/kyc", "/offers"];
 const AUTH_PREFIXES = ["/login", "/signup"];
 
 export function proxy(req: NextRequest) {
