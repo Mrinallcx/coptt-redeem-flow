@@ -2,12 +2,14 @@ import {
   COMEX_UNDERLYING,
   COPTT_VAULT_OPTIONS,
   type CopttVaultId,
-  VAULT_MIN_TICKET,
   type DashboardOfferSpec,
 } from "@/content/investor-portal-dashboard"
 
-/** COMEX-style physical redemption lot (tonnes). */
-export const REDEMPTION_LOT_TONNES = 25_000
+/** Physical redemption lot size (lb). */
+export const REDEMPTION_LOT_LB = 25_000
+
+/** @deprecated Alias for redeem flow imports. */
+export const REDEMPTION_LOT_TONNES = REDEMPTION_LOT_LB
 
 export const REDEMPTION_MIN_LOTS = 1
 
@@ -18,33 +20,46 @@ export type RedemptionHolding = {
   subtitle: string
   category: string
   coverImage: string
-  /** Token-backed copper balance available to redeem (tonnes). */
-  balanceTonnes: number
+  balanceLb: number
   redeemable: boolean
   specs: DashboardOfferSpec[]
   warehouseName?: string
   warehouseAddress?: string
 }
 
-export const REDEMPTION_SHIPMENT_SUMMARY =
-  "Warehouse pickup or insured delivery to your address"
+export const REDEMPTION_DELIVERY_SUMMARY =
+  "Warehouse pickup or insured shipment to your address"
+
+/** @deprecated Use REDEMPTION_DELIVERY_SUMMARY on cards. */
+export const REDEMPTION_SHIPMENT_SUMMARY = REDEMPTION_DELIVERY_SUMMARY
 
 export const REDEMPTION_FULFILMENT_DAYS = 30
 
-export function formatRedemptionTonnes(tonnes: number): string {
-  return `${tonnes.toLocaleString()} tonnes`
+export function formatRedemptionLb(lb: number): string {
+  return `${lb.toLocaleString()} lbs`
 }
 
-export function maxRedemptionLots(balanceTonnes: number): number {
-  return Math.floor(balanceTonnes / REDEMPTION_LOT_TONNES)
+/** @deprecated Use formatRedemptionLb. */
+export function formatRedemptionTonnes(lb: number): string {
+  return formatRedemptionLb(lb)
 }
 
-function vaultHolding(
-  vaultId: CopttVaultId,
-  balanceTonnes: number,
-): RedemptionHolding {
+export function maxRedemptionLots(balanceLb: number): number {
+  return Math.floor(balanceLb / REDEMPTION_LOT_LB)
+}
+
+function redemptionLocation(vaultId: CopttVaultId): string {
   const vault = COPTT_VAULT_OPTIONS.find((v) => v.id === vaultId)!
-  const lots = maxRedemptionLots(balanceTonnes)
+  return vault.location.replace(
+    /\(FDA-approved warehouse\)/i,
+    "(CME-Approved)",
+  )
+}
+
+function vaultHolding(vaultId: CopttVaultId, balanceLb: number): RedemptionHolding {
+  const vault = COPTT_VAULT_OPTIONS.find((v) => v.id === vaultId)!
+  const lots = maxRedemptionLots(balanceLb)
+  const location = redemptionLocation(vaultId)
   return {
     id: vaultId,
     vaultId,
@@ -52,28 +67,26 @@ function vaultHolding(
     subtitle: vault.label,
     category: "Commodities",
     coverImage: "/copper-vault.jpg",
-    balanceTonnes,
+    balanceLb,
     redeemable: lots >= REDEMPTION_MIN_LOTS,
     warehouseName: `${vault.premiumCity} bonded warehouse`,
-    warehouseAddress: vault.location,
+    warehouseAddress: location,
     specs: [
       {
         label: "YOUR HOLDING",
-        value: `${formatRedemptionTonnes(balanceTonnes)} CuTT-backed`,
+        value: `${formatRedemptionLb(balanceLb)} CuTT-backed`,
       },
       { label: "UNDERLYING", value: COMEX_UNDERLYING },
-      { label: "LOCATION", value: vault.location },
-      { label: "AVAILABLE", value: vault.available },
+      { label: "LOCATION", value: location },
       {
         label: "LOT SIZE",
-        value: `${formatRedemptionTonnes(REDEMPTION_LOT_TONNES)} (1 lot)`,
+        value: `${formatRedemptionLb(REDEMPTION_LOT_LB)} (1 lot)`,
       },
       {
         label: "MIN. REDEMPTION",
-        value: `${formatRedemptionTonnes(REDEMPTION_LOT_TONNES)} · increments of 1 lot`,
+        value: `${formatRedemptionLb(REDEMPTION_LOT_LB)} · increments of 1 lot`,
       },
-      { label: "SHIPMENT", value: REDEMPTION_SHIPMENT_SUMMARY },
-      { label: "MIN. TICKET", value: VAULT_MIN_TICKET },
+      { label: "DELIVERY", value: REDEMPTION_DELIVERY_SUMMARY },
     ],
   }
 }
@@ -81,28 +94,6 @@ function vaultHolding(
 /** Demo portfolio holdings eligible for physical redemption (CuTT vaults only). */
 export const REDEMPTION_HOLDINGS: RedemptionHolding[] = [
   vaultHolding("new-orleans", 50_000),
-  vaultHolding("tucson", 75_000),
-  {
-    id: "los-azules",
-    ticker: "CuTTr",
-    subtitle: "Los Azules Royalties",
-    category: "Commodities",
-    coverImage: "/copper-pit-dusk.png",
-    balanceTonnes: 0,
-    redeemable: false,
-    specs: [
-      { label: "YOUR HOLDING", value: "2 CuTTr (royalty exposure)" },
-      {
-        label: "NOTE",
-        value: "Physical redemption applies to CuTT vault copper only",
-      },
-      {
-        label: "MIN. REDEMPTION",
-        value: `${formatRedemptionTonnes(REDEMPTION_LOT_TONNES)} (CuTT vault lots)`,
-      },
-    ],
-  },
 ]
 
-/** @deprecated Use REDEMPTION_LOT_TONNES and lot counts in the redeem flow. */
-export const REDEMPTION_MIN_LB = REDEMPTION_LOT_TONNES
+export const REDEMPTION_MIN_LB = REDEMPTION_LOT_LB

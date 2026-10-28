@@ -29,9 +29,9 @@ import { ApiRequestError, copttApi } from "@/lib/api"
 import { DEV_BYPASS_AUTH } from "@/lib/dev-bypass-auth"
 import {
   REDEMPTION_FULFILMENT_DAYS,
-  REDEMPTION_LOT_TONNES,
+  REDEMPTION_LOT_LB,
   REDEMPTION_MIN_LOTS,
-  formatRedemptionTonnes,
+  formatRedemptionLb,
   maxRedemptionLots,
   type RedemptionHolding,
 } from "@/content/redemption-holdings"
@@ -94,7 +94,7 @@ export function RedeemFlow({ holding, open, onOpenChange }: RedeemFlowProps) {
   const { rainbowAddress, ensureChain, sendTx, waitForReceipt } = usePortalWallet()
   const connectedWallet = USE_RAINBOWKIT ? rainbowAddress : wallet
 
-  const maxLots = holding ? maxRedemptionLots(holding.balanceTonnes) : 0
+  const maxLots = holding ? maxRedemptionLots(holding.balanceLb) : 0
 
   const reset = useCallback(() => {
     setStep("amount")
@@ -123,8 +123,8 @@ export function RedeemFlow({ holding, open, onOpenChange }: RedeemFlowProps) {
   }, [])
 
   const lots = Number.parseInt(lotsInput, 10)
-  const totalTonnes =
-    Number.isFinite(lots) && lots > 0 ? lots * REDEMPTION_LOT_TONNES : 0
+  const totalLb =
+    Number.isFinite(lots) && lots > 0 ? lots * REDEMPTION_LOT_LB : 0
 
   const amountValid =
     holding &&
@@ -156,7 +156,7 @@ export function RedeemFlow({ holding, open, onOpenChange }: RedeemFlowProps) {
     return JSON.stringify({
       vault_id: holding.vaultId ?? holding.id,
       lots,
-      tonnes: totalTonnes,
+      lb: totalLb,
       method: shipmentMethod,
       ...(shipmentMethod === "pickup"
         ? {
@@ -167,7 +167,7 @@ export function RedeemFlow({ holding, open, onOpenChange }: RedeemFlowProps) {
           }
         : { delivery: address }),
     })
-  }, [holding, amountValid, lots, totalTonnes, shipmentMethod, address])
+  }, [holding, amountValid, lots, totalLb, shipmentMethod, address])
 
   const shipmentSummary = useMemo(() => {
     if (shipmentMethod === "pickup") {
@@ -191,7 +191,7 @@ export function RedeemFlow({ holding, open, onOpenChange }: RedeemFlowProps) {
     setStep("done")
     setBusy(false)
     toast.success(
-      `Redemption request for ${lots} lot${lots === 1 ? "" : "s"} (${formatRedemptionTonnes(totalTonnes)}) recorded`,
+      `Redemption request for ${lots} lot${lots === 1 ? "" : "s"} (${formatRedemptionLb(totalLb)}) recorded`,
     )
   }
 
@@ -209,7 +209,7 @@ export function RedeemFlow({ holding, open, onOpenChange }: RedeemFlowProps) {
       setWallet(from)
       const config = await copttApi.getRedemptionConfig()
       await ensureChain(config.chain_id)
-      const prepared = await copttApi.prepareRedemption(totalTonnes, deliveryRef)
+      const prepared = await copttApi.prepareRedemption(totalLb, deliveryRef)
       const approveHash = await sendTx(from, prepared.approve_tx)
       if ((await waitForReceipt(approveHash)).status !== "success") {
         throw new Error("The approval reverted.")
@@ -221,7 +221,7 @@ export function RedeemFlow({ holding, open, onOpenChange }: RedeemFlowProps) {
       setReference(`RED-${holding.id}-${lots}L`)
       setStep("done")
       toast.success(
-        `Requested redemption of ${formatRedemptionTonnes(totalTonnes)}`,
+        `Requested redemption of ${formatRedemptionLb(totalLb)}`,
       )
     } catch (err) {
       if (!isUserRejection(err)) {
@@ -252,7 +252,7 @@ export function RedeemFlow({ holding, open, onOpenChange }: RedeemFlowProps) {
           <SheetDescription>
             {step === "done"
               ? "We will email you when the desk confirms delivery."
-              : `${holding.subtitle} · ${formatRedemptionTonnes(holding.balanceTonnes)} available · ${formatRedemptionTonnes(REDEMPTION_LOT_TONNES)} per lot`}
+              : `${holding.subtitle} · ${formatRedemptionLb(holding.balanceLb)} available · ${formatRedemptionLb(REDEMPTION_LOT_LB)} per lot`}
           </SheetDescription>
         </SheetHeader>
 
@@ -275,20 +275,20 @@ export function RedeemFlow({ holding, open, onOpenChange }: RedeemFlowProps) {
                   onChange={(e) => setLotsInput(e.target.value.replace(/[^\d]/g, ""))}
                 />
                 <p className="text-xs text-muted-foreground">
-                  1 lot = {formatRedemptionTonnes(REDEMPTION_LOT_TONNES)}. Minimum{" "}
+                  1 lot = {formatRedemptionLb(REDEMPTION_LOT_LB)}. Minimum{" "}
                   {REDEMPTION_MIN_LOTS} lot · maximum {maxLots} lot
                   {maxLots === 1 ? "" : "s"} for your holding.
                 </p>
                 {amountValid ? (
                   <p className="text-sm font-medium">
-                    Total: {formatRedemptionTonnes(totalTonnes)} ({lots} lot
+                    Total: {formatRedemptionLb(totalLb)} ({lots} lot
                     {lots === 1 ? "" : "s"})
                   </p>
                 ) : null}
               </div>
               <p className="rounded-lg border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
                 CuTT is escrowed for delivery, not burned. Redemptions must be whole lots of{" "}
-                {formatRedemptionTonnes(REDEMPTION_LOT_TONNES)}. If fulfilment cannot complete,
+                {formatRedemptionLb(REDEMPTION_LOT_LB)}. If fulfilment cannot complete,
                 tokens return to your wallet.
               </p>
             </div>
@@ -321,14 +321,8 @@ export function RedeemFlow({ holding, open, onOpenChange }: RedeemFlowProps) {
                 <dl className="divide-y rounded-lg border text-sm">
                   <Row label="Facility" value={holding.warehouseName ?? holding.subtitle} />
                   <Row label="Address" value={holding.warehouseAddress ?? "—"} />
-                  <Row
-                    label="Pickup"
-                    value="Business hours · photo ID · forklift-safe vehicle or arranged carrier"
-                  />
-                  <Row
-                    label="Contact"
-                    value="Desk email with your reference before arrival"
-                  />
+                  <Row label="Pickup" value="At location" />
+                  <Row label="Contact" value="New Orleans warehouse" />
                 </dl>
               ) : (
                 <div className="space-y-3 rounded-lg border p-3">
@@ -432,7 +426,7 @@ export function RedeemFlow({ holding, open, onOpenChange }: RedeemFlowProps) {
                 <Row label="Asset" value={`${holding.ticker} · ${holding.subtitle}`} />
                 <Row
                   label="Amount"
-                  value={`${lots} lot${lots === 1 ? "" : "s"} · ${formatRedemptionTonnes(totalTonnes)}`}
+                  value={`${lots} lot${lots === 1 ? "" : "s"} · ${formatRedemptionLb(totalLb)}`}
                 />
                 <Row label="Shipment" value={shipmentSummary} />
                 {shipmentMethod === "pickup" ? (
@@ -497,7 +491,7 @@ export function RedeemFlow({ holding, open, onOpenChange }: RedeemFlowProps) {
                 <CheckIcon className="size-5" />
               </span>
               <p className="text-sm font-semibold">
-                {formatRedemptionTonnes(totalTonnes)} redemption request received
+                {formatRedemptionLb(totalLb)} redemption request received
               </p>
               {reference ? (
                 <p className="text-xs text-muted-foreground">Reference {reference}</p>
@@ -649,7 +643,7 @@ function explainRedeemError(err: unknown): string {
       case "wallet_not_bound":
         return "Bind a wallet in Settings before redeeming."
       case "below_minimum":
-        return `Minimum redemption is 1 lot (${formatRedemptionTonnes(REDEMPTION_LOT_TONNES)}).`
+        return `Minimum redemption is 1 lot (${formatRedemptionLb(REDEMPTION_LOT_LB)}).`
       case "redemption_paused":
         return "Redemption is paused."
     }
