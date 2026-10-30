@@ -15,11 +15,11 @@ import { BuyFlow } from "@/components/buy-flow"
 import { CUPTT_VAULT_OFFER_SPECS, COPTT_VAULT_OPTIONS } from "@/content/investor-portal-dashboard"
 import { PAYMENT_MIN_CHECKOUT } from "@/lib/payment-display"
 
-const VAULT_HIGHLIGHT_LABELS = new Set(["UNDERLYING", "LOCATION", "MIN. TICKET"])
+const VAULT_HIGHLIGHT_LABELS = new Set(["UNDERLYING", "LOCATION", "UNIT"])
 
 const HIGHLIGHTS = [
-  "1 CuTT = 1 lb of COMEX Grade 1 copper cathode in bonded warehouse",
-  "Physical copper held in an FDA-approved warehouse with warrant inventory",
+  "1 CuTT = 1 lb of COMEX Grade 1 copper cathode",
+  "Physical copper held in a CME-approved warehouse in New Orleans",
   "ERC-20 on Ethereum with transparent supply and on-chain settlement",
   "Optional physical redemption for institutional holders",
   "KYC-gated wallets only, fully regulatory-compliant",
@@ -215,11 +215,10 @@ export function OfferCoptt() {
           <h1 className="mt-4 font-heading text-3xl font-semibold tracking-tight">
             CuTT
           </h1>
-          <p className="mt-1 text-muted-foreground">Bonded vaults</p>
+          <p className="mt-1 text-muted-foreground">Vaults</p>
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            COMEX Grade 1 copper cathode in FDA-approved New Orleans and Tucson warehouses.
-            Choose your vault at checkout. 1 CuTT represents 1 lb of deliverable copper with
-            on-chain settlement.
+            COMEX Grade 1 copper cathode held in New Orleans (CME-approved warehouse).
+            1 CuTT represents 1 lb of deliverable copper with on-chain settlement.
           </p>
         </div>
       </header>

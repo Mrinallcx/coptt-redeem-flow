@@ -35,8 +35,21 @@ export const REDEMPTION_SHIPMENT_SUMMARY = REDEMPTION_DELIVERY_SUMMARY
 
 export const REDEMPTION_FULFILMENT_DAYS = 30
 
+const LB_PER_METRIC_TON = 2_204.6226218
+
+function formatTonCount(tons: number): string {
+  const nearest = Math.round(tons)
+  const display =
+    Math.abs(tons - nearest) < 0.05 ? nearest : Math.round(tons * 100) / 100
+  return display.toLocaleString(undefined, { maximumFractionDigits: 2 })
+}
+
 export function formatRedemptionLb(lb: number): string {
   return `${lb.toLocaleString()} lbs`
+}
+
+export function formatMetricTons(lb: number): string {
+  return `${formatTonCount(lb / LB_PER_METRIC_TON)} metric tons`
 }
 
 /** @deprecated Use formatRedemptionLb. */
@@ -50,10 +63,7 @@ export function maxRedemptionLots(balanceLb: number): number {
 
 function redemptionLocation(vaultId: CopttVaultId): string {
   const vault = COPTT_VAULT_OPTIONS.find((v) => v.id === vaultId)!
-  return vault.location.replace(
-    /\(FDA-approved warehouse\)/i,
-    "(CME-Approved)",
-  )
+  return vault.location
 }
 
 function vaultHolding(vaultId: CopttVaultId, balanceLb: number): RedemptionHolding {
@@ -69,7 +79,7 @@ function vaultHolding(vaultId: CopttVaultId, balanceLb: number): RedemptionHoldi
     coverImage: "/copper-vault.jpg",
     balanceLb,
     redeemable: lots >= REDEMPTION_MIN_LOTS,
-    warehouseName: `${vault.premiumCity} bonded warehouse`,
+    warehouseName: `${vault.premiumCity} warehouse`,
     warehouseAddress: location,
     specs: [
       {
@@ -84,7 +94,7 @@ function vaultHolding(vaultId: CopttVaultId, balanceLb: number): RedemptionHoldi
       },
       {
         label: "MIN. REDEMPTION",
-        value: `${formatRedemptionLb(REDEMPTION_LOT_LB)} · increments of 1 lot`,
+        value: formatRedemptionLb(REDEMPTION_LOT_LB),
       },
       { label: "DELIVERY", value: REDEMPTION_DELIVERY_SUMMARY },
     ],

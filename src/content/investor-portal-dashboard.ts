@@ -25,20 +25,17 @@ export const STAKE_MIN_TICKET = "1 CuTTy (1 lb), institutional minimums"
 
 /** Warrant-backed vault inventory (same wording on dashboard + investments). */
 export const NEW_ORLEANS_AVAILABLE =
-  "23,800 tonnes (confirm against official warrant inventory)"
+  "New Orleans: 60,000 t COMEX Grade 1 copper cathode"
 
-export const TUCSON_AVAILABLE =
-  "101,670 tonnes (confirm against official warrant inventory)"
+export const LOS_AZULES_EXPOSURE = "500,000 metric tonnes"
 
-export const LOS_AZULES_EXPOSURE = "2,500,000 lb (1,134 t)"
-
-export const KAMOA_EXPOSURE = "330,000 tonnes (2026 run-rate basis)"
+export const KAMOA_EXPOSURE = "500,000 metric tonnes"
 
 /** CuTTy products: 1 token = 1 lb COMEX exposure (no separate tonne inventory). */
 export const CUTTY_NOTIONAL_PER_TOKEN = "1 CuTTy = 1 lb COMEX copper exposure"
 
-/** CuTT bonded warehouses — selectable at checkout. */
-export type CopttVaultId = "new-orleans" | "tucson"
+/** CuTT warehouse locations — selectable at checkout. */
+export type CopttVaultId = "new-orleans"
 
 export type CopttVaultOption = {
   id: CopttVaultId
@@ -54,24 +51,16 @@ export const COPTT_VAULT_OPTIONS: CopttVaultOption[] = [
   {
     id: "new-orleans",
     label: "New Orleans Vault",
-    location: "New Orleans, LA, USA (FDA-approved warehouse)",
+    location: "New Orleans (CME-approved warehouse)",
     available: NEW_ORLEANS_AVAILABLE,
-    availableShort: "23,800 tonnes",
+    availableShort: "60,000 t",
     premiumCity: "New Orleans",
-  },
-  {
-    id: "tucson",
-    label: "Tucson Vault",
-    location: "Tucson, AZ, USA (FDA-approved warehouse)",
-    available: TUCSON_AVAILABLE,
-    availableShort: "101,670 tonnes",
-    premiumCity: "Tucson",
   },
 ]
 
 const cuttVaultCard: DashboardOfferCard = {
   ticker: "CuTT",
-  subtitle: "Bonded vaults",
+  subtitle: "Vaults",
   category: "Commodities",
   href: "/offers/coptt",
   coverImage: "/copper-vault.jpg",
@@ -79,20 +68,19 @@ const cuttVaultCard: DashboardOfferCard = {
     { label: "UNDERLYING", value: COMEX_UNDERLYING },
     {
       label: "LOCATION",
-      value: "New Orleans, LA and Tucson, AZ (FDA-approved warehouses)",
+      value: "New Orleans (CME-approved warehouse)",
     },
     {
       label: "LIVE PRICE",
       value:
-        "Full CME COMEX copper price + in-warehouse premium by vault (oracle-fed, real-time)",
+        "Full CME COMEX copper price + in-warehouse premium",
     },
     {
       label: "AVAILABLE",
-      value:
-        "New Orleans: 23,800 t · Tucson: 101,670 t (confirm against official warrant inventory)",
+      value: NEW_ORLEANS_AVAILABLE,
     },
     {
-      label: "MIN. TICKET",
+      label: "UNIT",
       value: VAULT_MIN_TICKET,
     },
   ],
@@ -125,12 +113,8 @@ const losAzulesRoyalties: DashboardOfferCard = {
     },
     { label: "EXPOSURE", value: LOS_AZULES_EXPOSURE },
     {
-      label: "YIELD SOURCE",
-      value: "Share of copper produced by Toto Finance mine programs",
-    },
-    {
       label: "DISTRIBUTION",
-      value: "Quarterly, every 3 months",
+      value: "Quarterly",
     },
   ],
 }
@@ -164,7 +148,7 @@ const kamoaRoyalties: DashboardOfferCard = {
     },
     {
       label: "DISTRIBUTION",
-      value: "Quarterly, every 3 months from first issuance",
+      value: "Quarterly from first issuance",
     },
   ],
 }
@@ -178,19 +162,15 @@ const cuttyRoyaltyStreams: DashboardOfferCard = {
   coverImage: "/copper-banner-mine.jpg",
   specs: [
     {
-      label: "YIELD SOURCE",
-      value: "Share of Toto Finance platform fees and mine royalty streams",
-    },
-    {
       label: "UNDERLYING",
       value: "Full CME COMEX copper price exposure",
     },
     { label: "NOTIONAL", value: CUTTY_NOTIONAL_PER_TOKEN },
     {
       label: "DISTRIBUTION",
-      value: "Quarterly, every 3 months from first issuance",
+      value: "Quarterly from first issuance",
     },
-    { label: "MIN. TICKET", value: STAKE_MIN_TICKET },
+    { label: "UNIT", value: STAKE_MIN_TICKET },
   ],
 }
 
@@ -203,10 +183,6 @@ const cuttyStaking: DashboardOfferCard = {
   coverImage: "/copper-mine.jpg",
   specs: [
     {
-      label: "YIELD SOURCE",
-      value: "Share of Toto Finance platform fees",
-    },
-    {
       label: "UNDERLYING",
       value: "Full CME COMEX copper price exposure",
     },
@@ -215,7 +191,7 @@ const cuttyStaking: DashboardOfferCard = {
       label: "DISTRIBUTION",
       value: "Daily, every 24 hours from first issuance",
     },
-    { label: "MIN. TICKET", value: STAKE_MIN_TICKET },
+    { label: "UNIT", value: STAKE_MIN_TICKET },
   ],
 }
 
@@ -240,4 +216,4 @@ export const CUPTT_VAULT_OFFER_SPECS: DashboardOfferSpec[] = cuttVaultCard.specs
 export const NEW_ORLEANS_VAULT_SPECS = CUPTT_VAULT_OFFER_SPECS
 
 export const DASHBOARD_BANNER_TAGLINE =
-  "COMEX Grade 1 cathode in bonded warehouses. 1 CuTT = 1 lb."
+  "COMEX Grade 1 cathode in CME-approved warehouse. 1 CuTT = 1 lb."

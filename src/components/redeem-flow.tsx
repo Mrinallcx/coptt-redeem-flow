@@ -31,6 +31,7 @@ import {
   REDEMPTION_FULFILMENT_DAYS,
   REDEMPTION_LOT_LB,
   REDEMPTION_MIN_LOTS,
+  formatMetricTons,
   formatRedemptionLb,
   maxRedemptionLots,
   type RedemptionHolding,
@@ -171,7 +172,7 @@ export function RedeemFlow({ holding, open, onOpenChange }: RedeemFlowProps) {
 
   const shipmentSummary = useMemo(() => {
     if (shipmentMethod === "pickup") {
-      return `Pickup · ${holding?.warehouseName ?? "Bonded warehouse"}`
+      return `Pickup · ${holding?.warehouseName ?? "Warehouse"}`
     }
     const parts = [
       address.contactName,
@@ -275,14 +276,14 @@ export function RedeemFlow({ holding, open, onOpenChange }: RedeemFlowProps) {
                   onChange={(e) => setLotsInput(e.target.value.replace(/[^\d]/g, ""))}
                 />
                 <p className="text-xs text-muted-foreground">
-                  1 lot = {formatRedemptionLb(REDEMPTION_LOT_LB)}. Minimum{" "}
-                  {REDEMPTION_MIN_LOTS} lot · maximum {maxLots} lot
-                  {maxLots === 1 ? "" : "s"} for your holding.
+                  1 lot = {formatRedemptionLb(REDEMPTION_LOT_LB)}, about{" "}
+                  {formatMetricTons(REDEMPTION_LOT_LB)}. Minimum {REDEMPTION_MIN_LOTS}{" "}
+                  lot · maximum {maxLots} lot{maxLots === 1 ? "" : "s"}.
                 </p>
                 {amountValid ? (
                   <p className="text-sm font-medium">
-                    Total: {formatRedemptionLb(totalLb)} ({lots} lot
-                    {lots === 1 ? "" : "s"})
+                    Total: {formatRedemptionLb(totalLb)} · {lots} lot
+                    {lots === 1 ? "" : "s"}
                   </p>
                 ) : null}
               </div>
@@ -297,7 +298,7 @@ export function RedeemFlow({ holding, open, onOpenChange }: RedeemFlowProps) {
           {step === "shipment" ? (
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Choose how COMEX Grade 1 cathode leaves the bonded warehouse after desk
+                Choose how COMEX Grade 1 cathode leaves the warehouse after desk
                 confirmation.
               </p>
               <div className="grid gap-2">
@@ -305,7 +306,7 @@ export function RedeemFlow({ holding, open, onOpenChange }: RedeemFlowProps) {
                   selected={shipmentMethod === "pickup"}
                   icon={<MapPinIcon className="size-4" />}
                   title="Pickup at warehouse"
-                  description="Collect at the vault with valid ID and this redemption reference."
+                  description="Collect at the vault"
                   onClick={() => setShipmentMethod("pickup")}
                 />
                 <ShipmentChoice

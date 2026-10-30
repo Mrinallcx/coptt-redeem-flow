@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import Link from "next/link"
 import {
   CircleHelpIcon,
   FolderIcon,
@@ -108,36 +107,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <div className="mt-auto px-2 pb-1 group-data-[collapsible=icon]:hidden">
-          <Link
-            href="/yield"
-            className="flex items-center gap-2.5 rounded-xl bg-[color-mix(in_oklab,var(--background),var(--foreground)_10%)] px-3 py-2.5 transition-colors duration-150 hover:bg-accent"
-          >
-            <span
-              aria-hidden="true"
-              className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-secondary-foreground"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                fill="currentColor"
-              >
-                <path d="M2.00488 19H22.0049V21H2.00488V19ZM2.00488 5L7.00488 8.5L12.0049 2L17.0049 8.5L22.0049 5V17H2.00488V5ZM4.00488 8.84131V15H20.0049V8.84131L16.5854 11.2349L12.0049 5.28024L7.42435 11.2349L4.00488 8.84131Z" />
-              </svg>
-            </span>
-            <span className="flex min-w-0 flex-col">
-              <span className="text-[13px] leading-4 font-medium text-foreground">
-                Earn
-              </span>
-              <span className="text-pretty text-xs text-muted-foreground">
-                Stake CuTTy for stCuTTy
-              </span>
-            </span>
-          </Link>
-        </div>
-        <NavSecondary items={navSecondary} />
+        <NavSecondary items={navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={sidebarUser} />

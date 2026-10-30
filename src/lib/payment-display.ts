@@ -1,5 +1,5 @@
 /** Checkout minimum line (sheet subtitle on all buy steps except done). */
-export const PAYMENT_MIN_CHECKOUT = "Minimum 1 lb - Paid in USDC or USD1"
+export const PAYMENT_MIN_CHECKOUT = "Minimum 1 lb - Paid in USDC"
 
 export const CHECKOUT_SHEET_DESCRIPTION = PAYMENT_MIN_CHECKOUT
 
